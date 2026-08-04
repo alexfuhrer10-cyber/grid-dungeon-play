@@ -5,6 +5,12 @@
 // These games are iframes of standalone files, so they cannot reach the app's
 // theme object or its procedural audio. The app hands the skin over on the URL
 // instead, and the audio is rebuilt here in about thirty lines.
+// NOTE ON THE FILENAME. These were called _shell.css and _shell.js, and
+// GitHub Pages runs Jekyll, which HIDES anything beginning with an underscore.
+// Both returned 404 on the live site while working perfectly on the dev server,
+// so the arcade shipped unstyled and silent for two releases without any local
+// test being able to see it. There is a .nojekyll now as well, but the real fix
+// is the name: it cannot happen again on any host.
 // ============================================================================
 
 (function () {
@@ -12,7 +18,7 @@
   // The app has eight papers, three of them light, and the arcade was hardcoded
   // dark: a player on the Notebook or Newsprint skin opened a cabinet and got a
   // black hole. Every colour comes in on the query string now, and anything not
-  // sent keeps the dark default already in _shell.css.
+  // sent keeps the dark default already in shell.css.
   var q = new URLSearchParams(location.search);
   var MAP = {
     bg: "--bg", ink: "--ink", dim: "--dim", dim2: "--dim2", line: "--line",
