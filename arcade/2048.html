@@ -120,6 +120,8 @@ function stuck(){
 function end(){
   over=true;
   SFX.no();
+  var top=0; for(var z=0;z<16;z++) if(G[z]>top) top=G[z];
+  ARCADE.report({gameOver:true,score:score,tile:top});
   if(score>bestEver()) saveBest(score);
   $("#overT").textContent="STUCK";
   $("#over").className="on";
@@ -148,7 +150,7 @@ function draw(){
   $("#best").textContent=b;
   $("#moves").textContent=moves;
   $("#bestever").textContent=Math.max(bestEver(),score);
-  if(b>=2048&&!hit2048){ hit2048=true; say("2048. Keep going if you want."); }
+  if(b>=2048&&!hit2048){ hit2048=true; say("2048. Keep going if you want."); ARCADE.report({tile:2048}); }
 }
 window.addEventListener("keydown",function(e){
   var m={ArrowLeft:"left",ArrowRight:"right",ArrowUp:"up",ArrowDown:"down"}[e.key];

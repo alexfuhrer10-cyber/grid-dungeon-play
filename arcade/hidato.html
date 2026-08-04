@@ -182,7 +182,7 @@ function place(i,v){
   if(done){
     var right=true;
     for(j=0;j<TOT;j++) if(cell[j]!==sol[j]) right=false;
-    if(right) SFX.win(); else SFX.no();
+    if(right){ SFX.win(); ARCADE.report({solved:true,size:TOT,mistakes:0}); } else SFX.no();
     say(right?"The thread is whole.":"Full, but the thread breaks somewhere. Take some back.",!right);
   }
 }

@@ -829,6 +829,7 @@ function solved(){
   for(r2=0;r2<N;r2++) for(c2=0;c2<N;c2++) if(scar[r2][c2]) t++;
   if(!t) score+=250;
   SFX.win(); flash("SOLVED","var(--ok)");
+  ARCADE.report({solved:true,size:N,brands:brandCount(),blind:!!blind});
   say("Puzzle solved. +500" + (t?"":" and +250 for an unbranded board") + ".");
   puzzleNo++;
   setTimeout(function(){ start(puzzleNo>=3?5:4); }, 1900);

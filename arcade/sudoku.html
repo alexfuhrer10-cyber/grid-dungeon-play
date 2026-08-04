@@ -175,7 +175,8 @@ function put(v){
   say(""); draw();
   var done=true;
   for(var i=0;i<81;i++) if(!cell[i]) done=false;
-  if(done){ SFX.win(); say("Solved with "+miss+" mistake"+(miss===1?"":"s")+"."); }
+  if(done){ SFX.win(); say("Solved with "+miss+" mistake"+(miss===1?"":"s")+".");
+    ARCADE.report({solved:true,level:LEVELS[level].n,mistakes:miss}); }
 }
 function say(t,bad){ var e=$("#say"); e.textContent=t||""; e.className=bad?"no":""; }
 function draw(){

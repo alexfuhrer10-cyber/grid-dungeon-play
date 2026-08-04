@@ -34,6 +34,21 @@
   // stylesheet flips those to ink-on-paper.
   if (q.get("paper") === "1") root.className += " paper";
 
+  // ---- REPORTING A RESULT BACK TO THE GAME ---------------------------------
+  // A cabinet is an iframe, so it cannot touch the save. It posts what happened
+  // and the app decides what that is worth. Deliberately one-way and
+  // deliberately dumb: the frame says "I solved a hard Sudoku with no
+  // mistakes", never "give me fifty Kencoins". Every rate lives in one table in
+  // the app, so the economy can be retuned without opening five files, and a
+  // tampered frame can only lie about WHAT it did, not about what it is owed.
+  window.ARCADE = {
+    report: function (what) {
+      try {
+        parent.postMessage({ kkdArcade: true, game: q.get("game") || "", what: what }, "*");
+      } catch (e) { /* opened directly, outside the app: nothing to report to */ }
+    },
+  };
+
   // ---- THE NOISE -----------------------------------------------------------
   // Procedural, like the rest of the game, so there are no files to load and
   // nothing to cache. Built lazily inside the first gesture because iOS will

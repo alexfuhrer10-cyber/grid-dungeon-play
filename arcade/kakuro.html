@@ -349,7 +349,7 @@ function put(v){
       for(q=0;q<cs3.length;q++) s+=cell[cs3[q]];
       if(s!==runs[k].sum) right=false;
     }
-    if(right) SFX.win(); else SFX.no();
+    if(right){ SFX.win(); ARCADE.report({solved:true,runs:runs.length,mistakes:0}); } else SFX.no();
     say(right?"Every run adds up. Solved.":"Full, but a run is wrong.",!right);
   }
 }
