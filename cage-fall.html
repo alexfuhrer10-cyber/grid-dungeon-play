@@ -116,7 +116,39 @@
   .arrow{font-size:13px;color:var(--dim2);font-weight:800}
   .cardbtns{display:flex;gap:8px;margin-top:4px}
   .cardbtns button{width:auto;flex:1}
+
+  /* ---- ON PAPER. It carries its own stylesheet rather than the arcade's, so
+     the light skins have to be answered here too or a cabinet that reads fine
+     everywhere else turns into a black slab on cream. ---- */
+  .paper body{background:radial-gradient(120% 80% at 50% 0%, #ffffff 0%, var(--bg) 70%)}
+  .paper #shaft{background:#fffdf8}
+  .paper .s{border-right-color:#00000012;border-bottom-color:#00000012}
+  .paper .s.junk{background:#b0206022}
+  .paper .s.col{background:#00000008}
+  .paper #grid{background:#fffdf8;border-color:var(--ink)}
+  .paper .c{border-right-color:#00000018;border-bottom-color:#00000018}
+  .paper .c b{color:var(--ink)}
+  .paper .c.filled{background:#00000010}
+  .paper .c.sealed{background:#1a7a5e1a}
+  .paper .c.sealed b{color:var(--ok)}
+  .paper .c.scar{background:#b0206020}
+  .paper .c.scar b{color:var(--rot)}
+  .paper .c.fallcell{background:#a8761a26}
+  .paper .c.aim{background:#1a7a5e1f}
+  .paper .c.aimbad{background:#b0206020}
+  .paper .box{background:#00000008;border-color:#00000022}
+  .paper kbd{background:#00000010;border-color:#00000026;color:var(--ink)}
+  .paper button{background:#00000008}
+  .paper button.ghost{background:transparent}
+  .paper .card{background:#fffdf8}
+  .paper .dg{background:#fffdf8}
+  .paper .dc{color:var(--ink);border-right-color:#00000018;border-bottom-color:#00000018}
+  .paper .dc.g{background:#a8761a26}
+  .paper .dc.ok{background:#1a7a5e1f}
+  .paper .dc.jk{background:#b0206020}
+  .paper #teach{background:#f4efe2e8}
 </style>
+<script src="arcade/_shell.js"></script>
 </head>
 <body>
 
@@ -712,10 +744,12 @@ function land(){
     var why=breaks(r,c,v);
     if(why){
       grid[r][c]=sol[r][c]; scar[r][c]=true; left--; anyBrand=true; streak=0;
+      SFX.no();
       score=Math.max(0,score-40);
       say("Wrong. " + why + ".<br>That square is branded: it shows the right number and now pays nothing.",true);
     } else {
       grid[r][c]=v; left--; streak++;
+      SFX.place();
       score += Math.round(25*(blind?2:1));
     }
     filledRows[r]=1; filledCols[c]=1; filledCages[cageId[r][c]]=1;
@@ -735,7 +769,7 @@ function land(){
     if(cageDone(cg)){ if(cageClean(cg)){ score+=60; msgs.push(clueOf(cg)+" cage"); cleared+=clearJunk(1); } else spoiled.push("the "+clueOf(cg)+" cage"); } }
 
   if(msgs.length){
-    flash(msgs.join("  ").toUpperCase(),"var(--ok)");
+    SFX.good(); flash(msgs.join("  ").toUpperCase(),"var(--ok)");
     say(msgs.join(" and ") + " done." + (cleared ? "  " + cleared + " blown off the top." : ""));
   } else if(spoiled.length && !anyBrand){
     say(spoiled.join(" and ") + " finished, but a branded square is in it. No score, no clearing.",true);
@@ -794,7 +828,7 @@ function solved(){
   for(c2=0;c2<N;c2++) t+=junk[c2];
   for(r2=0;r2<N;r2++) for(c2=0;c2<N;c2++) if(scar[r2][c2]) t++;
   if(!t) score+=250;
-  flash("SOLVED","var(--ok)");
+  SFX.win(); flash("SOLVED","var(--ok)");
   say("Puzzle solved. +500" + (t?"":" and +250 for an unbranded board") + ".");
   puzzleNo++;
   setTimeout(function(){ start(puzzleNo>=3?5:4); }, 1900);
@@ -802,7 +836,7 @@ function solved(){
 }
 function dead(why){
   running=false; clearInterval(tickT);
-  flash("BURIED","var(--rot)");
+  SFX.no(); flash("BURIED","var(--rot)");
   say((why||"The shaft filled up.") + " Score " + score + ".<br>Press NEW GAME.",true);
   draw();
 }

@@ -31,3 +31,15 @@ button{font-family:inherit;font-weight:800;letter-spacing:1.6px;font-size:11px;
 button.ghost{border-color:var(--line);background:transparent;color:var(--dim)}
 #say{margin-top:9px;font-size:12.5px;font-weight:700;color:var(--ok);min-height:32px;text-align:center;line-height:1.4}
 #say.no{color:var(--rot)}
+
+/* ---- LIGHT PAPER. Three of the app's eight skins are light, and every panel
+   and cell in here is drawn with a near-black wash that simply disappears on
+   cream. `paper` flips those to ink-on-paper so a cabinet is readable on the
+   skin the player actually chose. ---- */
+.paper body{background:radial-gradient(120% 80% at 50% 0%, #ffffff 0%, var(--bg) 70%)}
+.paper .box{background:#00000008; border-color:#00000022}
+.paper kbd{background:#00000010; border-color:#00000026; color:var(--ink)}
+.paper button{background:#00000008}
+.paper button.ghost{background:transparent}
+.paper .lab,.paper .k{color:#00000077}
+.paper .keys{color:#000000aa}

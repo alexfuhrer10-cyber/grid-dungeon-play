@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE DOUBLING</title>
 <link rel="stylesheet" href="_shell.css">
+<script src="_shell.js"></script>
 <style>
   #board{display:grid;grid-template-columns:repeat(4,76px);gap:8px;
     background:#120c28;border:3px solid var(--info);border-radius:8px;padding:8px;
@@ -22,6 +23,12 @@
   #over.on{display:flex}
   #over .t2{font-size:19px;letter-spacing:4px;font-weight:900;color:var(--rot)}
   #wrap{position:relative}
+
+  /* ---- ON PAPER ---- */
+  .paper #board{background:#00000012}
+  .paper .t{background:#00000010;color:var(--ink)}
+  .paper .t.e{background:#0000000a}
+  .paper #over{background:#fffdf8e8}
 </style>
 </head>
 <body>
@@ -96,6 +103,7 @@ function move(dir){
   setRows(r);
   if(G.join(",")===before) return;          // nothing moved: not a move
   score+=gained; moves++;
+  if(gained) SFX.good(); else SFX.tick();
   add(); draw();
   if(stuck()) end();
 }
@@ -111,21 +119,28 @@ function stuck(){
 }
 function end(){
   over=true;
+  SFX.no();
   if(score>bestEver()) saveBest(score);
   $("#overT").textContent="STUCK";
   $("#over").className="on";
   draw();
 }
 function say(t){ $("#say").textContent=t||""; }
-var COL={2:"#241c40",4:"#2b2350",8:"#3a2a1a",16:"#4a3018",32:"#5a2f22",64:"#6b2b1e",
-  128:"#1f4038",256:"#1c4a3c",512:"#1a5546",1024:"#3a2560",2048:"#5a3a10"};
+// Two ladders, because a tile ramp built for a black background turns to mud on
+// cream. Same progression, different ink.
+var ONPAPER = document.documentElement.className.indexOf("paper") >= 0;
+var COL = ONPAPER
+  ? {2:"#eae3d2",4:"#e3dcc6",8:"#f0d9a8",16:"#f0c98a",32:"#efb787",64:"#eda278",
+     128:"#a8dcc8",256:"#8fd3bb",512:"#75c9ad",1024:"#c3b3e8",2048:"#f0c05a"}
+  : {2:"#241c40",4:"#2b2350",8:"#3a2a1a",16:"#4a3018",32:"#5a2f22",64:"#6b2b1e",
+     128:"#1f4038",256:"#1c4a3c",512:"#1a5546",1024:"#3a2560",2048:"#5a3a10"};
 function draw(){
   var h="",i;
   for(i=0;i<16;i++){
     var v=G[i];
     h+='<div class="t'+(v?"":" e")+'" style="'+(v?"background:"+(COL[v]||"#6a4410")+";":"")
       +(v>=1024?"font-size:20px;":v>=128?"font-size:23px;":"")
-      +(v>=8?"color:var(--gold);":"")+'">'+(v||"")+'</div>';
+      +(v>=8&&!ONPAPER?"color:var(--gold);":"")+(ONPAPER?"color:#2A2418;":"")+'">'+(v||"")+'</div>';
   }
   $("#board").innerHTML=h;
   var b=0;for(i=0;i<16;i++) if(G[i]>b) b=G[i];

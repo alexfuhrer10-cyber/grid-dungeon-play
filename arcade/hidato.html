@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE THREAD</title>
 <link rel="stylesheet" href="_shell.css">
+<script src="_shell.js"></script>
 <style>
   #grid{display:grid;background:#0d0920;border:3px solid var(--info);border-radius:6px;
     box-shadow:0 0 34px #22e0ff22}
@@ -18,6 +19,14 @@
   .c.wrong{background:#3a1226;color:var(--rot)}
   .pad{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;max-width:290px}
   .pad button{width:auto;flex:0 0 auto;min-width:40px;padding:9px 0;font-size:13px}
+
+  /* ---- ON PAPER ---- */
+  .paper #grid{background:#fffdf8}
+  .paper .c{border-right-color:#00000018;border-bottom-color:#00000018;color:var(--ink)}
+  .paper .c.given{background:#0e7fa81f;color:var(--info)}
+  .paper .c.mine{background:#1a7a5e1f;color:var(--ok)}
+  .paper .c.hint{background:#a8761a1f}
+  .paper .c.wrong{background:#b0206026;color:var(--rot)}
 </style>
 </head>
 <body>
@@ -164,6 +173,7 @@ function place(i,v){
   if(next>=0 && nbrs(i).indexOf(next)<0){ say(v+" has to touch "+(v+1)+".",true); flashWrong(i); return; }
   for(j=0;j<TOT;j++) if(cell[j]===v && j!==i){ say(v+" is already on the board.",true); flashWrong(i); return; }
   moveLog.push({i:i,was:cell[i]});
+  SFX.place();
   cell[i]=v;
   say("");
   draw();
@@ -172,10 +182,12 @@ function place(i,v){
   if(done){
     var right=true;
     for(j=0;j<TOT;j++) if(cell[j]!==sol[j]) right=false;
+    if(right) SFX.win(); else SFX.no();
     say(right?"The thread is whole.":"Full, but the thread breaks somewhere. Take some back.",!right);
   }
 }
 function flashWrong(i){
+  SFX.no();
   var d=document.querySelectorAll(".c")[i];
   if(d){ d.className+=" wrong"; setTimeout(function(){ draw(); },380); }
 }

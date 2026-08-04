@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>NINE BOXES</title>
 <link rel="stylesheet" href="_shell.css">
+<script src="_shell.js"></script>
 <style>
   #grid{display:grid;grid-template-columns:repeat(9,42px);background:#0d0920;
     border:3px solid var(--info);border-radius:5px;box-shadow:0 0 34px #22e0ff22}
@@ -23,6 +24,19 @@
   .pad button{width:auto;flex:1 1 36px;padding:12px 0;font-size:16px;
     border-color:var(--info);color:var(--info);background:#12233a}
   .pad button.era{flex:1 1 80px;font-size:11px;border-color:var(--line);color:var(--dim);background:transparent}
+
+  /* ---- ON PAPER ---- */
+  .paper #grid{background:#fffdf8;border-color:var(--info)}
+  .paper .c{border-right-color:#00000018;border-bottom-color:#00000018;color:var(--ok)}
+  .paper .c.br{border-right-color:#00000055}
+  .paper .c.bb{border-bottom-color:#00000055}
+  .paper .c.given{background:#00000010;color:var(--ink)}
+  .paper .c.sel{background:#0e7fa826}
+  .paper .c.peer{background:#00000009}
+  .paper .c.same{background:#0e7fa814}
+  .paper .nt{color:var(--myst)}
+  .paper .pad button{background:#0e7fa814;border-color:var(--info);color:var(--info)}
+  .paper .pad button.era{background:transparent;border-color:#00000026;color:var(--dim)}
 </style>
 </head>
 <body>
@@ -145,23 +159,23 @@ function put(v){
     if(cell[sel]) return;
     notes[sel]=notes[sel]||{};
     if(notes[sel][v]) delete notes[sel][v]; else notes[sel][v]=1;
-    draw(); return;
+    SFX.tick(); draw(); return;
   }
   if(v===0){ cell[sel]=0; say(""); draw(); return; }
   if(v!==sol[sel]){
-    miss++; say("That breaks the row, the column or the box.",true);
+    miss++; SFX.no(); say("That breaks the row, the column or the box.",true);
     cell[sel]=v; draw();
     setTimeout(function(){ if(cell[sel]!==sol[sel]) { cell[sel]=0; draw(); } },520);
     return;
   }
-  cell[sel]=v; delete notes[sel];
+  cell[sel]=v; delete notes[sel]; SFX.place();
   // a placed number clears that pencil mark from everything it can see
   var ps=peers(sel);
   for(var q=0;q<ps.length;q++) if(notes[ps[q]]) delete notes[ps[q]][v];
   say(""); draw();
   var done=true;
   for(var i=0;i<81;i++) if(!cell[i]) done=false;
-  if(done) say("Solved with "+miss+" mistake"+(miss===1?"":"s")+".");
+  if(done){ SFX.win(); say("Solved with "+miss+" mistake"+(miss===1?"":"s")+"."); }
 }
 function say(t,bad){ var e=$("#say"); e.textContent=t||""; e.className=bad?"no":""; }
 function draw(){
@@ -197,7 +211,7 @@ function draw(){
 }
 $("#grid").addEventListener("click",function(e){
   var d=e.target.closest(".c"); if(!d) return;
-  sel=+d.dataset.i; draw();
+  sel=+d.dataset.i; SFX.tick(); draw();
 });
 (function(){
   var h="",v;
