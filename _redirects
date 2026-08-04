@@ -4,4 +4,14 @@
 # This lives in public/ so Vite copies it INTO dist. netlify.toml only applies
 # to a git-connected build — a drag-and-drop of the dist folder never sees it,
 # and would silently lose these rules.
+# ...EXCEPT AN ASSET, and this rule has to come first because the first match
+# wins. Every painted plate in this game degrades through Art's `fallback`, and
+# that degradation is driven by the img tag's onError. A catch-all that answers
+# 200 with the app shell means a missing .webp is not an error at all: onError
+# never fires, the fallback never runs, and the player gets a broken-image glyph
+# where a graceful stand-in was designed to be. GitHub Pages 404s these already,
+# which is why it has never been seen; a Netlify build would show all of them.
+/art/*      /art/:splat        404
+/assets/*   /assets/:splat     404
+
 /*  /index.html  200
