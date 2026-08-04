@@ -4,8 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>NINE BOXES</title>
-<link rel="stylesheet" href="shell.css">
-<script src="shell.js"></script>
+<link rel="stylesheet" href="shell.css?v=310">
+<script src="shell.js?v=310"></script>
+<script>
+// draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
+function tg(rows){
+  var n=rows[0].length, h='<div class="tG" style="grid-template-columns:repeat('+n+',42px)">';
+  for(var r=0;r<rows.length;r++) for(var c=0;c<n;c++){
+    var x=rows[r][c]||{};
+    h+='<div class="tC '+(x.k||"")+(x.wr?" wr":"")+(x.wb?" wb":"")+'">'
+      +(x.cl?'<span class="cl">'+x.cl+'</span>':"")+(x.v===undefined?"":x.v)+'</div>';
+  }
+  return h+'</div>';
+}
+
+var LESSON=[
+ {who:"ken", say:"NINE BOXES. NINE ROWS, NINE COLUMNS, AND NINE BOXES OF NINE. EVERY ONE OF THEM HOLDS 1 TO 9 EXACTLY ONCE. THAT IS THE WHOLE RULE AND I WILL NOT BE ELABORATING.",
+  show:'<div class="tDemo">'+tg([[{v:1},{v:2},{v:3,wr:1},{v:4},{v:5},{v:6,wr:1},{v:7},{v:8},{v:9}]])+'</div>'
+   +'<p class="tNote">One row. Nine numbers. None of them twice.</p>'},
+
+ {who:"ken", say:"THERE IS NO ARITHMETIC HERE. NOTHING ADDS UP TO ANYTHING. YOU ARE NOT WORKING OUT WHAT A SQUARE IS. <b>YOU ARE WORKING OUT WHAT IT CANNOT BE, UNTIL ONE THING IS LEFT.</b>",
+  show:'<div class="tDemo">'+tg([
+    [{v:1},{v:2},{v:3}],
+    [{v:4},{v:"?",k:"hl"},{v:6}],
+    [{v:7},{v:8},{v:9}]])+'</div>'
+   +'<p class="tNote">Eight of the nine are spoken for. The ninth needs no cleverness.</p>'},
+
+ {who:"ken", say:"YOU WILL NOT HOLD ALL OF THAT IN YOUR HEAD AND I WOULD RATHER YOU DID NOT TRY. PRESS <b>PENCIL</b>, OR HOLD SHIFT, AND WRITE THE CANDIDATES SMALL. PLACING A NUMBER RUBS IT OUT OF EVERY SQUARE THAT CAN SEE IT. I DO THAT PART.",
+  show:'<div class="tDemo">'+tg([[{v:"",k:""},{v:"27",k:"hl"},{v:"",k:""}]])+'</div>'
+   +'<p class="tNote">Two candidates left in that square. One of them will die somewhere else, and then you have it.</p>'},
+
+ {who:"ken", say:"A WRONG NUMBER IS REFUSED THE MOMENT YOU PLACE IT AND COUNTED AGAINST YOU. I AM NOT BEING CRUEL. <b>A PUZZLE THAT LETS YOU BE WRONG FOR TEN MOVES IS WASTING YOUR TIME, NOT TESTING IT.</b>",
+  show:'<div class="tDemo">'+tg([[{v:5,k:"no"}]])+'<span style="font-size:22px;color:var(--dim2)">&#8594;</span>'+tg([[{v:"",k:""}]])+'</div>'
+   +'<p class="tNote">Harder boards print fewer numbers. The rule never changes.</p>'}
+];
+
+</script>
 <style>
   #grid{display:grid;grid-template-columns:repeat(9,42px);background:#0d0920;
     border:3px solid var(--info);border-radius:5px;box-shadow:0 0 34px #22e0ff22}
@@ -63,6 +97,7 @@
     </div>
   </div>
   <button id="again">NEW PUZZLE</button>
+  <button class="ghost" id="howto" style="margin-top:7px">HOW TO PLAY</button>
   <button class="ghost" id="harder" style="margin-top:7px">DIFFICULTY: EASY</button>
 </div>
 <script>
@@ -243,6 +278,7 @@ $("#again").onclick=reset;
 $("#harder").onclick=function(){ level=(level+1)%LEVELS.length; reset(); };
 window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
 level=0; reset();
+ARCADE.teachOnce(LESSON);
 </script>
 </body>
 </html>

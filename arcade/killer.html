@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>THE KILLER</title>
+<link rel="stylesheet" href="shell.css?v=310">
+<script src="shell.js?v=310"></script>
+<style>
+  #grid{display:grid;grid-template-columns:repeat(9,44px);background:#0d0920;
+    border:3px solid var(--info);border-radius:5px;box-shadow:0 0 34px #22e0ff22}
+  .c{width:44px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;
+    font-size:20px;font-weight:800;cursor:pointer;color:var(--ok);
+    border-right:1px solid #ffffff10;border-bottom:1px solid #ffffff10}
+  .c.br{border-right:2px solid #ffffff40}
+  .c.bb{border-bottom:2px solid #ffffff40}
+  /* the cage is a dotted inner outline, exactly as a Killer prints it */
+  .c .cg{position:absolute;pointer-events:none}
+  .c .cgt{top:3px;left:3px;right:3px;border-top:1px dashed var(--gold)}
+  .c .cgb{bottom:3px;left:3px;right:3px;border-bottom:1px dashed var(--gold)}
+  .c .cgl{left:3px;top:3px;bottom:3px;border-left:1px dashed var(--gold)}
+  .c .cgr{right:3px;top:3px;bottom:3px;border-right:1px dashed var(--gold)}
+  .c .sum{position:absolute;top:2px;left:5px;font-size:10px;font-weight:900;color:var(--gold);z-index:2}
+  .c.sel{background:#12303a;box-shadow:inset 0 0 0 2px var(--gold)}
+  .c.peer{background:#ffffff08}
+  .c.incage{background:#a78bfa1c}
+  .c.same{background:#1b2a44}
+  .nt{font-size:9px;font-weight:800;color:var(--myst);letter-spacing:1px;line-height:1}
+  .pad{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px;width:396px}
+  .pad button{width:auto;flex:1 1 36px;padding:12px 0;font-size:16px;
+    border-color:var(--info);color:var(--info);background:#12233a}
+  .pad button.era{flex:1 1 80px;font-size:11px;border-color:var(--line);color:var(--dim);background:transparent}
+  /* ---- ON PAPER ---- */
+  .paper #grid{background:#fffdf8}
+  .paper .c{border-right-color:#00000018;border-bottom-color:#00000018;color:var(--ok)}
+  .paper .c.br{border-right-color:#00000055}
+  .paper .c.bb{border-bottom-color:#00000055}
+  .paper .c.sel{background:#0e7fa826}
+  .paper .c.peer{background:#00000009}
+  .paper .c.incage{background:#6a4cb016}
+  .paper .c.same{background:#0e7fa814}
+  .paper .pad button{background:#0e7fa814;border-color:var(--info);color:var(--info)}
+  .paper .pad button.era{background:transparent;border-color:#00000026;color:var(--dim)}
+</style>
+</head>
+<body>
+<div>
+  <div id="grid"></div>
+  <div class="pad" id="pad"></div>
+  <div id="say"></div>
+</div>
+<div class="side">
+  <h1>THE KILLER</h1>
+  <div class="tag">SUDOKU WITH CAGES.<br>NO GIVEN NUMBERS AT ALL.</div>
+  <div class="box">
+    <div class="lab">EMPTY SQUARES</div><div class="big" id="left">81</div>
+    <div class="r"><span class="k">MISTAKES</span><span class="v" id="miss" style="color:var(--rot)">0</span></div>
+    <div class="r"><span class="k">THIS CAGE WANTS</span><span class="v" id="want" style="color:var(--gold)">-</span></div>
+    <div class="r"><span class="k">SO FAR</span><span class="v" id="sofar">-</span></div>
+  </div>
+  <div class="box">
+    <div class="lab">CONTROLS</div>
+    <div class="keys">
+      click a square, then a number<br>
+      <kbd>1</kbd>-<kbd>9</kbd> type &nbsp; <kbd>del</kbd> rub out<br>
+      <kbd>N</kbd> pencil &nbsp; <kbd>shift</kbd>+digit<br>
+      arrows move
+    </div>
+  </div>
+  <button id="again">NEW PUZZLE</button>
+  <button class="ghost" id="howto" style="margin-top:7px">HOW TO PLAY</button>
+</div>
+<script>
+// THE KILLER - Killer Sudoku, and it is the most useful machine in this arcade
+// for a game that is really about KenKen.
+//
+// A Sudoku teaches elimination. A KenKen teaches "which set of digits makes
+// this number". A Killer is BOTH AT ONCE and nothing else is: the grid rules of
+// Sudoku, with cages that have a target, no repeats inside a cage, and NO GIVEN
+// NUMBERS ANYWHERE. Every square comes from the two skills together.
+//
+// The one difference from KenKen worth knowing: a Killer cage is always a SUM.
+// KenKen cages also subtract, multiply and divide. So this is the bridge, and it
+// is deliberately the last stop before the real thing.
+var $=function(s){return document.querySelector(s);};
+var sol,cell,sel,miss,notes,noting,cageId,cages;
+
+function rowOf(i){return (i/9)|0;} function colOf(i){return i%9;}
+function boxOf(i){return ((rowOf(i)/3)|0)*3+((colOf(i)/3)|0);}
+function peers(i){
+  var out=[],j;
+  for(j=0;j<81;j++){
+    if(j===i) continue;
+    if(rowOf(j)===rowOf(i)||colOf(j)===colOf(i)||boxOf(j)===boxOf(i)) out.push(j);
+  }
+  return out;
+}
+function okAt(g,i,v){
+  for(var j=0;j<81;j++){
+    if(j===i||g[j]!==v) continue;
+    if(rowOf(j)===rowOf(i)||colOf(j)===colOf(i)||boxOf(j)===boxOf(i)) return false;
+  }
+  return true;
+}
+function fillGrid(g,k){
+  if(k===81) return true;
+  var vs=[1,2,3,4,5,6,7,8,9],i,j,t;
+  for(i=vs.length-1;i>0;i--){ j=Math.floor(Math.random()*(i+1)); t=vs[i];vs[i]=vs[j];vs[j]=t; }
+  for(i=0;i<9;i++){
+    if(!okAt(g,k,vs[i])) continue;
+    g[k]=vs[i];
+    if(fillGrid(g,k+1)) return true;
+    g[k]=0;
+  }
+  return false;
+}
+// Cages grow over the finished grid, and a cage may NEVER take the same digit
+// twice: that is the rule that makes a Killer sum mean something.
+function growCages(){
+  cageId=new Array(81).fill(-1);
+  cages=[];
+  var order=[],i;
+  for(i=0;i<81;i++) order.push(i);
+  for(i=0;i<81;i++){
+    if(cageId[i]!==-1) continue;
+    var id=cages.length, cells=[i], have={};
+    cageId[i]=id; have[sol[i]]=1;
+    // TWO OR THREE SQUARES, never four. Measured, not guessed: with cages of up
+    // to four the odds of a random layout having exactly one answer are about 1
+    // in 60 and a board took 1.4 SECONDS to find, freezing the tab. Two and
+    // three cell cages constrain far harder, land in about 6 attempts, and are
+    // what a real Killer is mostly built from anyway. 21ms.
+    var want=2+Math.floor(Math.random()*2);
+    while(cells.length<want){
+      var opts=[],k,d;
+      for(k=0;k<cells.length;k++){
+        var r=rowOf(cells[k]), c=colOf(cells[k]);
+        var nb=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+        for(d=0;d<4;d++){
+          var rr=nb[d][0], cc=nb[d][1];
+          if(rr<0||cc<0||rr>8||cc>8) continue;
+          var idx=rr*9+cc;
+          if(cageId[idx]!==-1) continue;
+          if(have[sol[idx]]) continue;               // no repeat inside a cage
+          opts.push(idx);
+        }
+      }
+      if(!opts.length) break;
+      var pick=opts[Math.floor(Math.random()*opts.length)];
+      cageId[pick]=id; cells.push(pick); have[sol[pick]]=1;
+    }
+    cages.push({id:id,cells:cells});
+  }
+  // a one-square cage would simply print its answer, so it is absorbed
+  for(var q=cages.length-1;q>=0;q--){
+    if(cages[q].cells.length!==1) continue;
+    var only=cages[q].cells[0], best=null;
+    var r2=rowOf(only), c2=colOf(only);
+    var nbs=[[r2-1,c2],[r2+1,c2],[r2,c2-1],[r2,c2+1]];
+    for(var z=0;z<4;z++){
+      var ar=nbs[z][0], ac=nbs[z][1];
+      if(ar<0||ac<0||ar>8||ac>8) continue;
+      var cg=cages[cageId[ar*9+ac]];
+      if(!cg||cg.id===cages[q].id) continue;
+      var clash=false;
+      for(var y=0;y<cg.cells.length;y++) if(sol[cg.cells[y]]===sol[only]) clash=true;
+      if(clash) continue;
+      if(!best||cg.cells.length<best.cells.length) best=cg;
+    }
+    if(!best) continue;
+    best.cells.push(only); cageId[only]=best.id;
+    cages.splice(q,1);
+  }
+  var remap={};
+  cages.forEach(function(cg,n){ remap[cg.id]=n; cg.id=n; });
+  for(i=0;i<81;i++) if(remap[cageId[i]]!==undefined) cageId[i]=remap[cageId[i]];
+  cages.forEach(function(cg){
+    var s=0; for(var k=0;k<cg.cells.length;k++) s+=sol[cg.cells[k]];
+    cg.sum=s;
+    cg.head=cg.cells.slice().sort(function(a,b){ return a-b; })[0];
+  });
+}
+// EXACTLY ONE ANSWER, from the cages alone, with no numbers given away. That is
+// the whole promise of a Killer and it has to be proved, not hoped for.
+//
+// THE FIRST VERSION OF THIS COULD NOT SHIP. It scanned all 81 squares and all 9
+// digits at every node to pick the most-constrained square, about sixty thousand
+// operations per node, under a 400,000 node cap: one board took minutes and the
+// browser tab simply died. Uniqueness was never the slow part, the solver was.
+//
+// So: bitmasks for row, column and box, and the squares visited IN CAGE ORDER.
+// Cage order matters more than it looks. Finishing a cage before starting the
+// next one means the sum is checked the moment it can be checked, and a wrong
+// branch dies three squares in rather than sixty. Same search, same answer,
+// roughly a thousand times less work.
+var BITS=[0,1,2,4,8,16,32,64,128,256];
+var ORDER=null, CAGE_OF_STEP=null, LAST_IN_CAGE=null;
+function buildOrder(){
+  ORDER=[]; CAGE_OF_STEP=[]; LAST_IN_CAGE=[];
+  for(var c=0;c<cages.length;c++){
+    var cs=cages[c].cells;
+    for(var k=0;k<cs.length;k++){
+      ORDER.push(cs[k]); CAGE_OF_STEP.push(c); LAST_IN_CAGE.push(k===cs.length-1);
+    }
+  }
+}
+// smallest and largest totals still reachable with n distinct unused digits
+function reach(mask,n){
+  var lo=0,hi=0,got=0,d;
+  for(d=1;d<=9&&got<n;d++) if(!(mask&BITS[d])){ lo+=d; got++; }
+  got=0;
+  for(d=9;d>=1&&got<n;d--) if(!(mask&BITS[d])){ hi+=d; got++; }
+  return [lo,hi];
+}
+function countSol(cap){
+  buildOrder();
+  var rowM=new Int32Array(9), colM=new Int32Array(9), boxM=new Int32Array(9);
+  var cgMask=new Int32Array(cages.length), cgSum=new Int32Array(cages.length);
+  var cgLeft=new Int32Array(cages.length);
+  for(var c=0;c<cages.length;c++) cgLeft[c]=cages[c].cells.length;
+  var found=0, nodes=0, capped=false;
+  function rec(step){
+    if(found>=cap) return;
+    // RUNNING OUT OF BUDGET IS NOT AN ANSWER OF ZERO. The first version returned
+    // whatever it had counted so far when it hit the cap, so a board with two
+    // solutions could report one and ship as "proved unique", which is the exact
+    // promise this game makes. A capped search now says UNDECIDED and the board
+    // is thrown away.
+    if(++nodes>250000){ capped=true; return; }
+    if(step===81){ found++; return; }
+    var i=ORDER[step], ci=CAGE_OF_STEP[step], last=LAST_IN_CAGE[step];
+    var r=(i/9)|0, cc=i%9, bx=((r/3)|0)*3+((cc/3)|0);
+    var used=rowM[r]|colM[cc]|boxM[bx]|cgMask[ci];
+    var need=cages[ci].sum-cgSum[ci], left=cgLeft[ci]-1;
+    for(var v=1;v<=9;v++){
+      var bit=BITS[v];
+      if(used&bit) continue;
+      if(last){ if(v!==need) continue; }
+      else {
+        if(v>=need) continue;                  // must leave room for the rest
+        var rg=reach(cgMask[ci]|bit,left);
+        if(need-v<rg[0]||need-v>rg[1]) continue;
+      }
+      rowM[r]|=bit; colM[cc]|=bit; boxM[bx]|=bit;
+      cgMask[ci]|=bit; cgSum[ci]+=v; cgLeft[ci]--;
+      rec(step+1);
+      rowM[r]^=bit; colM[cc]^=bit; boxM[bx]^=bit;
+      cgMask[ci]^=bit; cgSum[ci]-=v; cgLeft[ci]++;
+      if(found>=cap) return;
+    }
+  }
+  rec(0);
+  return (capped && found<cap) ? -1 : found;
+}
+function reset(){
+  for(var attempt=0;attempt<200;attempt++){
+    sol=new Array(81).fill(0);
+    fillGrid(sol,0);
+    growCages();
+    if(countSol(2)===1){
+      cell=new Array(81).fill(0);
+      sel=-1; miss=0; notes={}; noting=false;
+      say(""); draw();
+      return;
+    }
+  }
+  say("could not build a killer. press NEW PUZZLE",true);
+}
+function cageOf(i){ return cages[cageId[i]]; }
+function put(v){
+  if(sel<0) return;
+  if(noting&&v){
+    if(cell[sel]) return;
+    notes[sel]=notes[sel]||{};
+    if(notes[sel][v]) delete notes[sel][v]; else notes[sel][v]=1;
+    SFX.tick(); draw(); return;
+  }
+  if(v===0){ cell[sel]=0; say(""); draw(); return; }
+  if(v!==sol[sel]){
+    miss++; SFX.no();
+    // name the rule that broke, because "wrong" teaches nothing
+    var cg=cageOf(sel), sum=v, k, dup=false;
+    for(k=0;k<cg.cells.length;k++){
+      if(cg.cells[k]===sel) continue;
+      if(cell[cg.cells[k]]===v) dup=true;
+      sum+=cell[cg.cells[k]];
+    }
+    var why = dup ? "that cage already has a "+v
+      : sum>cg.sum ? "that would put the "+cg.sum+" cage over"
+      : "that breaks the row, the column or the box";
+    say("No: "+why+".",true);
+    cell[sel]=v; draw();
+    setTimeout(function(){ if(cell[sel]!==sol[sel]){ cell[sel]=0; draw(); } },560);
+    return;
+  }
+  cell[sel]=v; delete notes[sel]; SFX.place();
+  var ps=peers(sel), q;
+  for(q=0;q<ps.length;q++) if(notes[ps[q]]) delete notes[ps[q]][v];
+  var cg2=cageOf(sel);
+  for(q=0;q<cg2.cells.length;q++) if(notes[cg2.cells[q]]) delete notes[cg2.cells[q]][v];
+  say(""); draw();
+  var done=true;
+  for(var i=0;i<81;i++) if(!cell[i]) done=false;
+  if(done){ SFX.win(); say("Solved with "+miss+" mistake"+(miss===1?"":"s")+".");
+    ARCADE.report({solved:true,mistakes:miss}); }
+}
+function say(t,bad){ var e=$("#say"); e.textContent=t||""; e.className=bad?"no":""; }
+function draw(){
+  var h="",i;
+  var selV = sel>=0?cell[sel]:0;
+  var ps = sel>=0?peers(sel):[];
+  var myCage = sel>=0?cageOf(sel):null;
+  for(i=0;i<81;i++){
+    var cls="c";
+    if(colOf(i)%3===2&&colOf(i)!==8) cls+=" br";
+    if(rowOf(i)%3===2&&rowOf(i)!==8) cls+=" bb";
+    if(i===sel) cls+=" sel";
+    else if(myCage&&myCage.cells.indexOf(i)>=0) cls+=" incage";
+    else if(sel>=0&&ps.indexOf(i)>=0) cls+=" peer";
+    if(selV&&cell[i]===selV&&i!==sel) cls+=" same";
+    var cg=cageOf(i), inner="";
+    // dashed edges wherever the cage stops
+    var r=rowOf(i),c=colOf(i);
+    if(r===0||cageId[i-9]!==cageId[i]) inner+='<span class="cg cgt"></span>';
+    if(r===8||cageId[i+9]!==cageId[i]) inner+='<span class="cg cgb"></span>';
+    if(c===0||cageId[i-1]!==cageId[i]) inner+='<span class="cg cgl"></span>';
+    if(c===8||cageId[i+1]!==cageId[i]) inner+='<span class="cg cgr"></span>';
+    if(cg.head===i) inner+='<span class="sum">'+cg.sum+'</span>';
+    if(cell[i]) inner+=cell[i];
+    else if(notes[i]){
+      var ns=Object.keys(notes[i]);
+      if(ns.length) inner+='<span class="nt">'+ns.sort().join("")+'</span>';
+    }
+    h+='<div class="'+cls+'" data-i="'+i+'">'+inner+'</div>';
+  }
+  $("#grid").innerHTML=h;
+  var e=0; for(i=0;i<81;i++) if(!cell[i]) e++;
+  $("#left").textContent=e;
+  $("#miss").textContent=miss;
+  if(myCage){
+    var s=0; for(i=0;i<myCage.cells.length;i++) s+=cell[myCage.cells[i]];
+    $("#want").textContent=myCage.sum;
+    $("#sofar").textContent=s;
+  } else { $("#want").textContent="-"; $("#sofar").textContent="-"; }
+  var nb=$("#noteBtn");
+  if(nb){ nb.textContent=noting?"PENCIL ON":"PENCIL";
+    nb.style.color=noting?"var(--myst)":"var(--dim)";
+    nb.style.borderColor=noting?"var(--myst)":"var(--line)"; }
+}
+$("#grid").addEventListener("click",function(e){
+  var d=e.target.closest(".c"); if(!d) return;
+  sel=+d.dataset.i; SFX.tick(); draw();
+});
+(function(){
+  var h="",v;
+  for(v=1;v<=9;v++) h+='<button data-v="'+v+'">'+v+'</button>';
+  h+='<button class="era" data-v="0">RUB OUT</button>';
+  h+='<button class="era" id="noteBtn">PENCIL</button>';
+  $("#pad").innerHTML=h;
+  $("#pad").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    if(b.id==="noteBtn"){ noting=!noting; draw(); return; }
+    put(+b.dataset.v);
+  });
+})();
+window.addEventListener("keydown",function(e){
+  if(e.key==="n"||e.key==="N"){ noting=!noting; draw(); return; }
+  if(/^[1-9]$/.test(e.key)){ if(e.shiftKey){ var w=noting; noting=true; put(+e.key); noting=w; } else put(+e.key); return; }
+  if(e.key==="Backspace"||e.key==="Delete"){ put(0); return; }
+  if(sel<0) return;
+  var r=rowOf(sel),c=colOf(sel);
+  if(e.key==="ArrowLeft"&&c>0) sel--;
+  else if(e.key==="ArrowRight"&&c<8) sel++;
+  else if(e.key==="ArrowUp"&&r>0) sel-=9;
+  else if(e.key==="ArrowDown"&&r<8) sel+=9;
+  else return;
+  e.preventDefault(); draw();
+});
+window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
+
+// draws a demo grid for the tutorial
+function tg(rows){
+  var n=rows[0].length, h='<div class="tG" style="grid-template-columns:repeat('+n+',42px)">';
+  for(var r=0;r<rows.length;r++) for(var c=0;c<n;c++){
+    var x=rows[r][c]||{};
+    h+='<div class="tC '+(x.k||"")+(x.wr?" wr":"")+(x.wb?" wb":"")+'">'
+      +(x.cl?'<span class="cl">'+x.cl+'</span>':"")+(x.v===undefined?"":x.v)+'</div>';
+  }
+  return h+'</div>';
+}
+var LESSON=[
+ {who:"tez", say:"Right. This one is the important one, so pay attention to <b>what it is made of</b> rather than what it looks like. It is a Sudoku, so 1 to 9 in every row, every column, every box. You know that part.",
+  show:'<div class="tDemo">'+tg([[{v:1},{v:2},{v:3,wr:1},{v:4},{v:5},{v:6}]])+'</div>'},
+
+ {who:"tez", say:"Now the new part. Those dotted outlines are <b>cages</b>, and the little number is what the cage <b>adds up to</b>. And no digit may appear twice inside one cage, even when the row and the column would happily allow it.",
+  show:'<div class="tDemo">'+tg([[{cl:"6",v:"",k:"hl"},{v:"",k:"hl"},{v:"",k:"hl"}]])+'</div>'
+   +'<p class="tNote">Three squares adding to 6, so it is <b>1+2+3</b> and nothing else. Not 2+2+2. Not 1+1+4. The no-repeat rule is what makes a sum worth reading.</p>'},
+
+ {who:"tez", say:"Here is why I care about this machine. <b>There are no given numbers at all.</b> Not one. Every single square comes out of the cages and the grid rules working together, which means you cannot start by copying, only by reasoning.",
+  show:'<div class="tDemo">'+tg([
+    [{cl:"6",v:"",k:""},{v:"",k:""},{cl:"15",v:"",k:""}],
+    [{v:"",k:""},{v:"",k:""},{v:"",k:""}]])+'</div>'
+   +'<p class="tNote">An empty board and some sums. That is the entire starting position.</p>'},
+
+ {who:"tez", say:"And this is the bridge to what we actually do. A Killer cage asks <b>which set of digits makes this number</b>. So does a KenKen cage. The difference is that ours also <b>subtract, multiply and divide</b>, and are not always a straight line.",
+  show:'<div class="tDemo">'+tg([[{cl:"9",v:4,k:"ok"},{v:5,k:"ok"}]])
+   +'<span style="font-size:15px;color:var(--dim2)">KILLER</span>'
+   +tg([[{cl:"20&times;",v:4,k:"hl"},{v:5,k:"hl"}]])
+   +'<span style="font-size:15px;color:var(--dim2)">KENKEN</span></div>'
+   +'<p class="tNote">Same two squares, same two digits, a different question asked about them.</p>'},
+
+ {who:"tez", say:"Use the <b>PENCIL</b>. On a board with no givens you will be holding four or five candidates in a square for a long time, and the ones who try to do that in their heads are the ones who stop coming back.",
+  show:""}
+];
+$("#again").onclick=reset;
+reset();
+ARCADE.teachOnce(LESSON);
+</script>
+</body>
+</html>

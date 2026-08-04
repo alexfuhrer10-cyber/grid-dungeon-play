@@ -4,8 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE SUMS</title>
-<link rel="stylesheet" href="shell.css">
-<script src="shell.js"></script>
+<link rel="stylesheet" href="shell.css?v=310">
+<script src="shell.js?v=310"></script>
+<script>
+// draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
+function tg(rows){
+  var n=rows[0].length, h='<div class="tG" style="grid-template-columns:repeat('+n+',42px)">';
+  for(var r=0;r<rows.length;r++) for(var c=0;c<n;c++){
+    var x=rows[r][c]||{};
+    h+='<div class="tC '+(x.k||"")+(x.wr?" wr":"")+(x.wb?" wb":"")+'">'
+      +(x.cl?'<span class="cl">'+x.cl+'</span>':"")+(x.v===undefined?"":x.v)+'</div>';
+  }
+  return h+'</div>';
+}
+
+var LESSON=[
+ {who:"keeper", say:"A number in a corner, and a line of empty squares beneath it. What do you suppose the number is <b>for</b>?",
+  show:'<div class="tDemo">'+tg([
+    [{cl:"7",k:"blk"},{v:"",k:""},{v:"",k:""}]])+'</div>'
+   +'<p class="tNote">It is the total. Those two squares add to seven.</p>'},
+
+ {who:"keeper", say:"Seven from two squares. <b>Which pairs?</b> Not 7 and 0, there is no nought here. Not 3 and 4 only. Ask it properly and the list is short, and a short list is the whole game.",
+  show:'<div class="tDemo">'+tg([[{v:1,k:"ok"},{v:6,k:"ok"}]])+tg([[{v:2,k:"ok"},{v:5,k:"ok"}]])+tg([[{v:3,k:"ok"},{v:4,k:"ok"}]])+'</div>'
+   +'<p class="tNote">Three pairs, each of them either way round. Never a repeat inside one run.</p>'},
+
+ {who:"keeper", say:"A clue in the <b>top right</b> counts across. One in the <b>bottom left</b> counts down. Every white square belongs to one of each, so it must answer <b>two questions at once</b>. That is where the answer comes from.",
+  show:'<div class="tDemo">'+tg([
+    [{cl:"4",k:"blk"},{cl:"7",k:"blk",wb:1},{k:"blk"}],
+    [{cl:"7",k:"blk"},{v:"?",k:"hl"},{v:"",k:""}],
+    [{cl:"5",k:"blk"},{v:"",k:""},{k:"blk"}]])+'</div>'
+   +'<p class="tNote">That square sits in a 7 across and a 7 down. Both have to be true of it.</p>'},
+
+ {who:"keeper", say:"A few squares are printed to start you. Everything else you find. <b>What would you like the first one to be?</b> It does not matter. Find the run with the fewest ways to be true, and begin there.",
+  show:""}
+];
+
+</script>
 <style>
   #grid{display:grid;background:#0d0920;border:3px solid var(--info);border-radius:5px;
     box-shadow:0 0 34px #22e0ff22}
@@ -64,6 +98,7 @@
     </div>
   </div>
   <button id="again">NEW GRID</button>
+  <button class="ghost" id="howto" style="margin-top:7px">HOW TO PLAY</button>
 </div>
 <script>
 // THE SUMS - Kakuro. Every run of white squares adds up to its clue and never
@@ -408,6 +443,7 @@ window.addEventListener("keydown",function(e){
 $("#again").onclick=reset;
 window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
 reset();
+ARCADE.teachOnce(LESSON);
 </script>
 </body>
 </html>

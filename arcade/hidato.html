@@ -4,8 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE THREAD</title>
-<link rel="stylesheet" href="shell.css">
-<script src="shell.js"></script>
+<link rel="stylesheet" href="shell.css?v=310">
+<script src="shell.js?v=310"></script>
+<script>
+// draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
+function tg(rows){
+  var n=rows[0].length, h='<div class="tG" style="grid-template-columns:repeat('+n+',42px)">';
+  for(var r=0;r<rows.length;r++) for(var c=0;c<n;c++){
+    var x=rows[r][c]||{};
+    h+='<div class="tC '+(x.k||"")+(x.wr?" wr":"")+(x.wb?" wb":"")+'">'
+      +(x.cl?'<span class="cl">'+x.cl+'</span>':"")+(x.v===undefined?"":x.v)+'</div>';
+  }
+  return h+'</div>';
+}
+
+var LESSON=[
+ {who:"michi", say:"No sums. Nothing to add up. Just <b>1, then 2, then 3</b>, all the way to the end, and every step has to touch the one before it.",
+  show:'<div class="tDemo">'+tg([[{v:1,k:"ok"},{v:2,k:"ok"},{v:3,k:"ok"}]])+'</div>'},
+
+ {who:"michi", say:"Touching means <b>any of the eight squares around it</b>. Corners count. That is more room than people expect, and it is why this looks easy and is not.",
+  show:'<div class="tDemo">'+tg([
+    [{v:"",k:"hl"},{v:"",k:"hl"},{v:"",k:"hl"}],
+    [{v:"",k:"hl"},{v:4,k:"ok"},{v:"",k:"hl"}],
+    [{v:"",k:"hl"},{v:"",k:"hl"},{v:"",k:"hl"}]])+'</div>'
+   +'<p class="tNote">5 can go in any of those. Which one, you work out from what comes after.</p>'},
+
+ {who:"michi", say:"Some numbers are already printed. Those are the ones that matter: they are <b>where the thread has to arrive</b>, and everything between two of them is a path with only one way through.",
+  show:'<div class="tDemo">'+tg([
+    [{v:1,k:"ok"},{v:"",k:""},{v:"",k:""}],
+    [{v:"",k:""},{v:"",k:""},{v:5,k:"ok"}]])+'</div>'
+   +'<p class="tNote">1 here, 5 there. Only so many ways to walk between them in three steps.</p>'},
+
+ {who:"michi", say:"The board lights the squares the next number could go in. Take one back with <b>TAKE ONE BACK</b> when you have walked yourself into a corner. <i>You will.</i> That is not failing, that is the puzzle.",
+  show:""}
+];
+
+</script>
 <style>
   #grid{display:grid;background:#0d0920;border:3px solid var(--info);border-radius:6px;
     box-shadow:0 0 34px #22e0ff22}
@@ -51,6 +85,7 @@
     </div>
   </div>
   <button id="again">NEW THREAD</button>
+  <button class="ghost" id="howto" style="margin-top:7px">HOW TO PLAY</button>
   <button class="ghost" id="undo" style="margin-top:7px">TAKE ONE BACK</button>
 </div>
 <script>
@@ -230,6 +265,7 @@ $("#undo").onclick=function(){
 $("#again").onclick=reset;
 window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
 reset();
+ARCADE.teachOnce(LESSON);
 </script>
 </body>
 </html>

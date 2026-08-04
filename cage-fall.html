@@ -148,7 +148,7 @@
   .paper .dc.jk{background:#b0206020}
   .paper #teach{background:#f4efe2e8}
 </style>
-<script src="arcade/shell.js"></script>
+<script src="arcade/shell.js?v=310"></script>
 </head>
 <body>
 
@@ -204,18 +204,6 @@
 
   <button id="again">NEW GAME</button>
   <button class="ghost" id="howto" style="margin-top:7px">HOW TO PLAY</button>
-</div>
-
-<div id="teach">
-  <div class="card">
-    <h2 id="tH"></h2>
-    <div class="step" id="tS"></div>
-    <div id="tBody"></div>
-    <div class="cardbtns">
-      <button class="ghost" id="tBack">BACK</button>
-      <button id="tNext">NEXT</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -952,57 +940,42 @@ function dg(rows){
   }
   return h+'</div>';
 }
+// She is the one who plays this. Tez would explain the generator, and the point
+// of Cage Fall is not the generator, it is the squeeze.
 var LESSON=[
- {h:"THE BOTTOM IS A REAL KENKEN",
-  b:'<p>A proper KenKen, generated and then <b>proved to have exactly one answer</b> before you see it. Thick outlines are <b>cages</b>. Each shows a clue.</p>'
-   +'<div class="demo">'+dg([
+ {who:"lulu", say:"Okay so it LOOKS like Tetris and it is not Tetris. Down the bottom there is a <b>real KenKen</b>, proved to have exactly one answer before you ever see it. Thick outlines are cages. Each one has a clue.",
+  show:'<div class="demo">'+dg([
      [{cl:"6"+MUL,wr:1},{wr:1},{cl:"3"+SUB},{wr:1,wb:1}],
      [{wb:1,wr:1},{cl:"7+",wr:1,wb:1},{wb:1},{wr:1,wb:1}]])+'</div>'
-   +'<p class="small"><b>6'+MUL+'</b> means those squares multiply to 6. <b>7+</b> means they add to 7. Fill every square so every clue is true, no number twice in any row, none twice in any column.</p>'},
+   +'<p class="small"><b>6'+MUL+'</b> multiplies to 6. <b>7+</b> adds to 7. Every clue true, no number twice in a row, none twice in a column. Same rules you already know.</p>'},
 
- {h:"YOU DO NOT PICK THE SQUARE",
-  b:'<p>Numbers arrive one at a time. You pick <b>which column to drop it down</b>, and it falls to the <b>lowest empty square</b> in that column.</p>'
-   +'<div class="demo">'+dg([
+ {who:"lulu", say:"Here is the bit that got me. <b>You do not pick the square.</b> Numbers come to you one at a time, you pick the COLUMN, and it drops to the lowest empty square down there. That is the whole game.",
+  show:'<div class="demo">'+dg([
      [{v:"",k:""},{v:3,k:"ok"},{v:"",k:""},{v:"",k:""}],
      [{v:2},{v:4},{v:1},{v:3}]])+'</div>'
-   +'<p class="small">That is the squeeze. You cannot put the number where you want it, so you have to find the column whose bottom gap will take it.</p>'},
+   +'<p class="small">So you stop asking where this number goes. You start asking which column has a gap that will take it. Different question. Took me about four boards.</p>'},
 
- {h:"A WRONG DROP BRANDS THE SQUARE",
-  b:'<p>Drop a number that repeats in its row, repeats in its column, or breaks its cage, and it lands anyway. The square is <b style="color:var(--rot)">branded</b>: it shows you the right number, and it is spoiled.</p>'
-   +'<div class="demo">'+dg([
+ {who:"lulu", say:"Drop a number that repeats its row, repeats its column or busts its cage and it still lands. The square goes <b style='color:var(--rot)'>branded</b>: it shows you the right number, and it is spoiled.",
+  show:'<div class="demo">'+dg([
      [{v:2},{v:4,k:"jk"},{v:1},{v:3}]])+'</div>'
-   +'<p>You keep the number, so the puzzle can always be finished. What you lose is worth more: <b>a row, column or cage holding a branded square pays nothing and clears nothing</b>, for the rest of the board.</p>'
-   +'<p class="small">Brand four squares and the board is too corrupt to be worth finishing. That is how you lose.</p>'},
+   +'<p>You keep the number, so the board can always be finished. What you lose is worth more. <b>Any row, column or cage holding a branded square pays nothing and clears nothing</b>, for good.</p>'
+   +'<p class="small">Four brands and the board is too rotten to be worth your time. That is losing.</p>'},
 
- {h:"CLEARING A ROW BLOWS THE JUNK OFF",
-  b:'<p>Finish a <b>row</b> of the KenKen and <b>one layer of junk is blown off every column</b>. Finish a cage or a column and one block goes.</p>'
-   +'<div class="demo">'+dg([[{v:"",k:"jk"},{v:"",k:"jk"},{v:"",k:""},{v:"",k:"jk"}]])
+ {who:"lulu", say:"And this is the payoff. Finish a <b>clean row</b> of the KenKen and <b>a whole layer of junk gets blown off every column</b>. A cage or a column takes one block.",
+  show:'<div class="demo">'+dg([[{v:"",k:"jk"},{v:"",k:"jk"},{v:"",k:""},{v:"",k:"jk"}]])
    +'<span class="arrow">ROW DONE &#8594;</span>'
    +dg([[{v:"",k:""},{v:"",k:""},{v:"",k:""},{v:"",k:""}]])+'</div>'
-   +'<p><b>That is the line clear.</b> Only a <b>clean</b> row does it: one with a branded square in it seals and gives you nothing.</p>'
-   +'<p class="small">Junk only ever appears one way: drop into a column of the puzzle that is already <b>full</b> and the number stacks up above the board instead. Clear a clean row to blow it off.</p>'
-   +'<p class="small">If a number is no use yet, press <kbd>C</kbd> to <b>hold</b> it and get it back when you want it, or <kbd>D</kbd> to bin it and let it come round again. Both cost far less than junk.</p>'}
+   +'<p>That is your line clear. Junk turns up exactly one way: drop into a column that is already <b>full</b> and the number piles up above the board instead.</p>'},
+
+ {who:"lulu", say:"Two buttons that will save you. <kbd>C</kbd> <b>holds</b> a number you cannot use yet and gives it back when you want it. <kbd>D</kbd> bins it and sends it round again. Both cost you almost nothing. Junk costs you everything. Use them.",
+  show:""}
 ];
-var li=0;
-function showLesson(){
-  var L=LESSON[li];
-  $("#tH").textContent=L.h;
-  $("#tS").textContent="STEP "+(li+1)+" OF "+LESSON.length;
-  $("#tBody").innerHTML=L.b;
-  $("#tBack").style.visibility=li?"visible":"hidden";
-  $("#tNext").textContent=(li===LESSON.length-1)?"PLAY":"NEXT";
-}
-$("#tNext").onclick=function(){
-  if(li<LESSON.length-1){ li++; showLesson(); return; }
-  $("#teach").className="off"; score=0; puzzleNo=1; start(4);
-};
-$("#tBack").onclick=function(){ if(li){ li--; showLesson(); } };
-$("#howto").onclick=function(){ li=0; showLesson(); $("#teach").className=""; running=false; };
 $("#again").onclick=function(){ score=0; puzzleNo=1; start(4); };
 $("#blindBtn").onclick=function(){ blind=!blind; draw(); };
 window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
 
-score=0; puzzleNo=1; blind=false; start(4); running=false; clearInterval(tickT); showLesson();
+score=0; puzzleNo=1; blind=false; start(4); running=false; clearInterval(tickT);
+ARCADE.teachOnce(LESSON, function(){ score=0; puzzleNo=1; start(4); });
 </script>
 </body>
 </html>

@@ -4,8 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE DOUBLING</title>
-<link rel="stylesheet" href="shell.css">
-<script src="shell.js"></script>
+<link rel="stylesheet" href="shell.css?v=310">
+<script src="shell.js?v=310"></script>
+<script>
+// draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
+function tg(rows){
+  var n=rows[0].length, h='<div class="tG" style="grid-template-columns:repeat('+n+',42px)">';
+  for(var r=0;r<rows.length;r++) for(var c=0;c<n;c++){
+    var x=rows[r][c]||{};
+    h+='<div class="tC '+(x.k||"")+(x.wr?" wr":"")+(x.wb?" wb":"")+'">'
+      +(x.cl?'<span class="cl">'+x.cl+'</span>':"")+(x.v===undefined?"":x.v)+'</div>';
+  }
+  return h+'</div>';
+}
+
+var LESSON=[
+ {who:"kelly", say:"No grid rules in this one. Slide the whole board one way, and <b>two equal numbers touching become one number twice as big</b>.",
+  show:'<div class="tDemo">'+tg([[{v:2,k:"ok"},{v:2,k:"ok"},{v:"",k:""},{v:"",k:""}]])
+   +'<span style="font-size:22px;color:var(--dim2)">&#8594;</span>'
+   +tg([[{v:4,k:"hl"},{v:"",k:""},{v:"",k:""},{v:"",k:""}]])+'</div>'},
+
+ {who:"kelly", say:"Every slide drops a new number onto the board, so <b>the clock here is the space you have left</b>. Fill it up and you are done. That is the only way to lose.",
+  show:'<div class="tDemo">'+tg([
+    [{v:2},{v:4},{v:2},{v:4}],
+    [{v:4},{v:2},{v:4},{v:2}]])+'</div>'
+   +'<p class="tNote">Nothing touching matches. Nothing merges. That board is finished.</p>'},
+
+ {who:"kelly", say:"So keep your big numbers <b>in one corner</b> and slide the same two directions. Chasing merges all over the board is how a run ends at 200 instead of 2000.",
+  show:'<div class="tDemo">'+tg([
+    [{v:"",k:""},{v:"",k:""},{v:"",k:""},{v:"",k:""}],
+    [{v:64,k:"hl"},{v:32,k:"hl"},{v:8},{v:2}]])+'</div>'},
+
+ {who:"kelly", say:"Get to <b>2048</b> and you have done it. You can keep going after. Your best score is kept, which is the only reason to have a second go.",
+  show:""}
+];
+
+</script>
 <style>
   #board{display:grid;grid-template-columns:repeat(4,76px);gap:8px;
     background:#120c28;border:3px solid var(--info);border-radius:8px;padding:8px;
@@ -51,6 +85,7 @@
     <div class="keys"><kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd> slide<br>or swipe</div>
   </div>
   <button id="again">NEW GAME</button>
+  <button class="ghost" id="howto" style="margin-top:7px">HOW TO PLAY</button>
 </div>
 <script>
 // THE DOUBLING - 2048, unchanged in its rules because they do not need help.
@@ -165,6 +200,7 @@ document.addEventListener("touchend",function(e){
 },{passive:true});
 $("#again").onclick=reset; $("#retry").onclick=reset;
 reset();
+ARCADE.teachOnce(LESSON);
 </script>
 </body>
 </html>
