@@ -1,0 +1,7 @@
+# The game keeps all its state in the query string, never in paths, so any
+# unknown path should still serve the app rather than a 404.
+#
+# This lives in public/ so Vite copies it INTO dist. netlify.toml only applies
+# to a git-connected build — a drag-and-drop of the dist folder never sees it,
+# and would silently lose these rules.
+/*  /index.html  200
