@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>THE SUMS</title>
+<link rel="stylesheet" href="_shell.css">
+<style>
+  #grid{display:grid;background:#0d0920;border:3px solid var(--info);border-radius:5px;
+    box-shadow:0 0 34px #22e0ff22}
+  .c{width:54px;height:54px;position:relative;display:flex;align-items:center;justify-content:center;
+    border-right:1px solid #ffffff12;border-bottom:1px solid #ffffff12;
+    font-size:21px;font-weight:800;color:var(--ok)}
+  .c.blk{background:#120c26;cursor:default}
+  .c.open{cursor:pointer;background:#171130}
+  .c.sel{background:#12303a;box-shadow:inset 0 0 0 2px var(--gold)}
+  .c.bad{color:var(--rot)}
+  .c.run{background:#1b1440}
+  .slash{position:absolute;inset:0;pointer-events:none}
+  .slash::after{content:"";position:absolute;left:0;top:0;width:100%;height:100%;
+    background:linear-gradient(to bottom right,transparent 49%,#ffffff26 49%,#ffffff26 51%,transparent 51%)}
+  .dn{position:absolute;left:4px;bottom:2px;font-size:11px;font-weight:900;color:var(--gold)}
+  .ac{position:absolute;right:4px;top:2px;font-size:11px;font-weight:900;color:var(--info)}
+  .pad{display:flex;gap:5px;margin-top:11px;flex-wrap:wrap;max-width:330px}
+  .pad button{width:auto;flex:1 1 30px;padding:11px 0;font-size:15px;
+    border-color:var(--info);color:var(--info);background:#12233a}
+  .pad button.era{flex:1 1 74px;font-size:10px;border-color:var(--line);color:var(--dim);background:transparent}
+</style>
+</head>
+<body>
+<div>
+  <div id="grid"></div>
+  <div class="pad" id="pad"></div>
+  <div id="say"></div>
+</div>
+<div class="side">
+  <h1>THE SUMS</h1>
+  <div class="tag">EACH RUN ADDS TO ITS CLUE.<br>NO DIGIT TWICE IN A RUN.</div>
+  <div class="box">
+    <div class="lab">EMPTY SQUARES</div><div class="big" id="left">0</div>
+    <div class="r"><span class="k">THIS RUN WANTS</span><span class="v" id="want" style="color:var(--gold)">-</span></div>
+    <div class="r"><span class="k">SO FAR</span><span class="v" id="sofar">-</span></div>
+  </div>
+  <div class="box">
+    <div class="lab">HOW IT WORKS</div>
+    <div style="font-size:11.5px;color:var(--dim);line-height:1.6">
+      A clue in the <b style="color:var(--info)">top right</b> is the sum of the run going
+      <b>across</b>. One in the <b style="color:var(--gold)">bottom left</b> is the run going
+      <b>down</b>. Digits are 1 to 9 and <b>never repeat inside one run</b>.
+    </div>
+  </div>
+  <button id="again">NEW GRID</button>
+</div>
+<script>
+// THE SUMS - Kakuro. Every run of white squares adds up to its clue and never
+// repeats a digit inside itself.
+//
+// It belongs in this cabinet because it is the closest cousin KenKen has: both
+// are "a set of squares, a target, and no repeats". The difference is that a
+// KenKen cage is a blob with any operation and a Kakuro run is always a
+// straight line and always a sum, so it is the gentler of the two and a fair
+// place to learn the habit of asking WHICH SET OF DIGITS can make this number.
+var $=function(s){return document.querySelector(s);};
+var W=7,H=7;
+var blk,sol,cell,sel,runs;
+
+function id(x,y){return y*W+x;}
+// A fixed, known-good skeleton: the top row and left column are clue squares,
+// with a couple of blocks inside to keep the runs short enough to reason about.
+var PATTERN=[
+  "########",
+  "#..##...",
+  "#....#..",
+  "#..#....",
+  "#....#..",
+  "#..##...",
+  "#......."
+];
+function buildSkeleton(){
+  blk=[];
+  for(var y=0;y<H;y++) for(var x=0;x<W;x++){
+    var row=PATTERN[y]||"";
+    blk.push(row[x]==="#"||row[x]===undefined);
+  }
+}
+// every maximal straight line of open squares, across and down
+function findRuns(){
+  var out=[],x,y,i;
+  for(y=0;y<H;y++){
+    var cur=[];
+    for(x=0;x<W;x++){
+      i=id(x,y);
+      if(blk[i]){ if(cur.length>1) out.push({dir:"a",cells:cur}); cur=[]; }
+      else cur.push(i);
+    }
+    if(cur.length>1) out.push({dir:"a",cells:cur});
+  }
+  for(x=0;x<W;x++){
+    var cur2=[];
+    for(y=0;y<H;y++){
+      i=id(x,y);
+      if(blk[i]){ if(cur2.length>1) out.push({dir:"d",cells:cur2}); cur2=[]; }
+      else cur2.push(i);
+    }
+    if(cur2.length>1) out.push({dir:"d",cells:cur2});
+  }
+  return out;
+}
+// fill the open squares so no run repeats a digit; the clues come from the fill
+function solveFill(){
+  var order=[],i;
+  for(i=0;i<W*H;i++) if(!blk[i]) order.push(i);
+  var g=new Array(W*H).fill(0);
+  var mine={};
+  for(i=0;i<runs.length;i++) for(var k=0;k<runs[i].cells.length;k++){
+    var c=runs[i].cells[k];
+    (mine[c]=mine[c]||[]).push(i);
+  }
+  var ok=(function rec(k){
+    if(k===order.length) return true;
+    var c=order[k],vs=[1,2,3,4,5,6,7,8,9],a,b,t;
+    for(a=vs.length-1;a>0;a--){ b=Math.floor(Math.random()*(a+1)); t=vs[a];vs[a]=vs[b];vs[b]=t; }
+    for(a=0;a<9;a++){
+      var v=vs[a],clash=false;
+      var rs=mine[c]||[];
+      for(b=0;b<rs.length && !clash;b++){
+        var cs=runs[rs[b]].cells;
+        for(var q=0;q<cs.length;q++) if(cs[q]!==c && g[cs[q]]===v){ clash=true; break; }
+      }
+      if(clash) continue;
+      g[c]=v;
+      if(rec(k+1)) return true;
+      g[c]=0;
+    }
+    return false;
+  })(0);
+  return ok?g:null;
+}
+function reset(){
+  buildSkeleton();
+  runs=findRuns();
+  sol=null;
+  for(var t=0;t<30 && !sol;t++) sol=solveFill();
+  if(!sol){ say("could not build a grid. press NEW GRID",true); return; }
+  for(var i=0;i<runs.length;i++){
+    var s=0;
+    for(var k=0;k<runs[i].cells.length;k++) s+=sol[runs[i].cells[k]];
+    runs[i].sum=s;
+  }
+  cell=new Array(W*H).fill(0);
+  sel=-1; say(""); draw();
+}
+function runsAt(i){
+  var out=[];
+  for(var k=0;k<runs.length;k++) if(runs[k].cells.indexOf(i)>=0) out.push(runs[k]);
+  return out;
+}
+// the clue square for a run sits immediately before its first cell
+function clueFor(i){
+  var out={a:null,d:null},k;
+  for(k=0;k<runs.length;k++){
+    var cs=runs[k].cells, first=cs[0];
+    if(runs[k].dir==="a" && first===i+1 && (i%W)+1===first%W) out.a=runs[k].sum;
+    if(runs[k].dir==="d" && first===i+W) out.d=runs[k].sum;
+  }
+  return out;
+}
+function put(v){
+  if(sel<0||blk[sel]) return;
+  if(v===0){ cell[sel]=0; say(""); draw(); return; }
+  // the two Kakuro rules, said out loud
+  var rs=runsAt(sel),k,q;
+  for(k=0;k<rs.length;k++){
+    var cs=rs[k].cells;
+    for(q=0;q<cs.length;q++) if(cs[q]!==sel && cell[cs[q]]===v){
+      say("That run already has a "+v+".",true); return;
+    }
+  }
+  cell[sel]=v;
+  for(k=0;k<rs.length;k++){
+    var cs2=rs[k].cells,sum=0,full=true;
+    for(q=0;q<cs2.length;q++){ if(!cell[cs2[q]]) full=false; sum+=cell[cs2[q]]; }
+    if(full && sum!==rs[k].sum){
+      say("That run adds to "+sum+" and it wants "+rs[k].sum+".",true);
+      draw(); return;
+    }
+    if(sum>rs[k].sum){ say("That run is already over "+rs[k].sum+".",true); draw(); return; }
+  }
+  say(""); draw();
+  var done=true;
+  for(k=0;k<W*H;k++) if(!blk[k]&&!cell[k]) done=false;
+  if(done){
+    var right=true;
+    for(k=0;k<runs.length;k++){
+      var s=0,cs3=runs[k].cells;
+      for(q=0;q<cs3.length;q++) s+=cell[cs3[q]];
+      if(s!==runs[k].sum) right=false;
+    }
+    say(right?"Every run adds up. Solved.":"Full, but a run is wrong.",!right);
+  }
+}
+function say(t,bad){ var e=$("#say"); e.textContent=t||""; e.className=bad?"no":""; }
+function draw(){
+  $("#grid").style.gridTemplateColumns="repeat("+W+",54px)";
+  var h="",i;
+  var selRuns = sel>=0 ? runsAt(sel) : [];
+  for(i=0;i<W*H;i++){
+    var cls="c", inner="";
+    if(blk[i]){
+      cls+=" blk";
+      var cl=clueFor(i);
+      if(cl.a!==null||cl.d!==null){
+        inner+='<span class="slash"></span>';
+        if(cl.a!==null) inner+='<span class="ac">'+cl.a+'</span>';
+        if(cl.d!==null) inner+='<span class="dn">'+cl.d+'</span>';
+      }
+    } else {
+      cls+=" open";
+      if(i===sel) cls+=" sel";
+      else { for(var k=0;k<selRuns.length;k++) if(selRuns[k].cells.indexOf(i)>=0){ cls+=" run"; break; } }
+      if(cell[i]) inner+=cell[i];
+    }
+    h+='<div class="'+cls+'" data-i="'+i+'">'+inner+'</div>';
+  }
+  $("#grid").innerHTML=h;
+  var e=0; for(i=0;i<W*H;i++) if(!blk[i]&&!cell[i]) e++;
+  $("#left").textContent=e;
+  if(sel>=0&&selRuns.length){
+    var r0=selRuns[0],s=0;
+    for(var q=0;q<r0.cells.length;q++) s+=cell[r0.cells[q]];
+    $("#want").textContent=r0.sum;
+    $("#sofar").textContent=s;
+  } else { $("#want").textContent="-"; $("#sofar").textContent="-"; }
+}
+$("#grid").addEventListener("click",function(e){
+  var d=e.target.closest(".c"); if(!d) return;
+  var i=+d.dataset.i; if(blk[i]) return;
+  sel=i; draw();
+});
+(function(){
+  var h="",v;
+  for(v=1;v<=9;v++) h+='<button data-v="'+v+'">'+v+'</button>';
+  h+='<button class="era" data-v="0">RUB OUT</button>';
+  $("#pad").innerHTML=h;
+  $("#pad").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return; put(+b.dataset.v);
+  });
+})();
+window.addEventListener("keydown",function(e){
+  if(/^[1-9]$/.test(e.key)) put(+e.key);
+  else if(e.key==="Backspace"||e.key==="Delete") put(0);
+});
+$("#again").onclick=reset;
+window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
+reset();
+</script>
+</body>
+</html>

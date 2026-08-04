@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CAGE FALL</title>
+<style>
+  :root{
+    --bg:#0a0716; --ink:#f2efff; --dim:#a49cd0; --dim2:#7e76a8;
+    --line:#2e2450; --info:#22e0ff; --gold:#f5c842; --rot:#ff2d95; --ok:#5df0c8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:radial-gradient(120% 80% at 50% 0%,#1c1140 0%,var(--bg) 62%);
+    color:var(--ink); font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;
+    display:flex; align-items:flex-start; justify-content:center; gap:22px; padding:16px;
+    -webkit-font-smoothing:antialiased; user-select:none;
+  }
+  #board{position:relative}
+
+  /* the whole shaft: junk zone on top, the KenKen at the bottom */
+  #shaft{display:grid; background:#0b0819; border:3px solid var(--info);
+    border-bottom:none; border-radius:5px 5px 0 0; box-shadow:0 0 30px #22e0ff22}
+  .s{width:52px; height:52px; position:relative; display:flex;
+     align-items:center; justify-content:center;
+     border-right:1px solid #ffffff08; border-bottom:1px solid #ffffff08}
+  .s.junk{background:#43213a; box-shadow:inset 0 0 0 1px #ff2d9555}
+  .s.junk::after{content:"";position:absolute;inset:5px;border-radius:2px;
+    background:repeating-linear-gradient(45deg,#ff2d9544 0 4px,transparent 4px 8px)}
+  .s.junk.new{animation:thud .3s ease-out both}
+  @keyframes thud{0%{transform:translateY(-14px);opacity:.2}100%{transform:none;opacity:1}}
+  .s.fallnum b{font-size:23px;font-weight:900;color:var(--gold);text-shadow:0 0 14px #f5c84288}
+  .s.col{background:#ffffff07}
+  .s.colblocked{background:#ff2d9510}
+
+  /* the KenKen itself */
+  #grid{display:grid; background:#0d0920; border:3px solid var(--ink);
+    border-radius:0 0 3px 3px; box-shadow:0 0 34px #22e0ff22}
+  .c{position:relative; width:52px; height:52px; display:flex;
+     align-items:center; justify-content:center;
+     border-right:1px solid #ffffff1a; border-bottom:1px solid #ffffff1a}
+  .c.wr{border-right:3px solid var(--ink)}
+  .c.wb{border-bottom:3px solid var(--ink)}
+  .c .cl{position:absolute; top:2px; left:4px; font-size:11px; font-weight:900; color:var(--gold)}
+  .c b{font-size:26px; font-weight:800; color:var(--ink)}
+  .c.filled{background:#171b3a}
+  .c.filled b{color:var(--ink)}
+  .c.scar{background:#3a1226; box-shadow:inset 0 0 0 2px #ff2d9566}
+  .c.scar b{color:var(--rot)}
+  .c.scar::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(45deg,#ff2d9526 0 5px,transparent 5px 10px)}
+  .c.sealed{background:#0f2a22}
+  .c.sealed b{color:var(--ok)}
+  .c.rowdone{background:#123027}
+  .c.aim{background:#0d3328; box-shadow:inset 0 0 0 2px var(--ok)}
+  .c.aimbad{background:#33101f; box-shadow:inset 0 0 0 2px var(--rot)}
+  .c.aimblind{box-shadow:inset 0 0 0 2px #f5c84288}
+  .c.fallcell{background:#3d3208; box-shadow:inset 0 0 0 2px var(--gold)}
+  .c.land b{animation:pop .4s ease-out both}
+  @keyframes pop{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+  .c.zap{animation:zap .5s ease-out both}
+  @keyframes zap{0%{background:#5df0c8;box-shadow:0 0 26px #5df0c8}100%{background:#0f2a22}}
+
+  #flash{position:absolute; left:50%; top:34%; transform:translateX(-50%);
+    font-size:25px; font-weight:900; letter-spacing:3px; color:var(--ok);
+    text-shadow:0 0 22px #5df0c8; pointer-events:none; opacity:0; white-space:nowrap; z-index:5}
+  #flash.go{animation:fl 1.1s ease-out both}
+  @keyframes fl{0%{opacity:0;transform:translateX(-50%) scale(.7)}
+    18%{opacity:1;transform:translateX(-50%) scale(1.08)}72%{opacity:1}100%{opacity:0}}
+  #say{margin-top:9px; font-size:12.5px; font-weight:700; color:var(--ok);
+    min-height:34px; text-align:center; line-height:1.4}
+  #say.no{color:var(--rot)}
+  #dline{position:absolute; left:-7px; right:-7px; height:2px; background:var(--rot);
+    opacity:.5; pointer-events:none}
+
+  .side{width:216px}
+  h1{font-size:17px; letter-spacing:6px; margin:0; color:var(--gold); font-weight:900}
+  .tag{font-size:10px; letter-spacing:1.6px; color:var(--dim2); margin:3px 0 13px; line-height:1.5}
+  .box{background:#150e2e; border:1px solid var(--line); border-radius:8px;
+    padding:11px 13px; margin-bottom:9px}
+  .lab{font-size:9px; letter-spacing:2.4px; color:var(--dim2); margin-bottom:7px}
+  .big{font-size:26px; font-weight:900; color:var(--gold); line-height:1}
+  .r{display:flex; justify-content:space-between; align-items:baseline; margin-top:6px}
+  .k{font-size:9px; letter-spacing:1.6px; color:var(--dim2)}
+  .v{font-size:14px; font-weight:800}
+  .q{display:flex; gap:5px}
+  .qn{width:25px;height:25px;border-radius:5px;background:#241c40;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--dim)}
+  kbd{background:#241c40;border:1px solid var(--line);border-radius:3px;
+    padding:1px 6px; font-size:11px; color:var(--ink); font-weight:700}
+  .keys{font-size:11px; color:var(--dim); line-height:1.95}
+  button{font-family:inherit;font-weight:800;letter-spacing:1.6px;font-size:11px;
+    padding:11px;border-radius:6px;cursor:pointer;width:100%;
+    border:1px solid var(--gold);background:#241c07;color:var(--gold)}
+  button.ghost{border-color:var(--line);background:transparent;color:var(--dim)}
+
+  #teach{position:fixed; inset:0; background:#080612e8; backdrop-filter:blur(7px);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:18px}
+  #teach.off{display:none}
+  .card{width:100%; max-width:600px; background:#150f2e; border:1px solid var(--gold);
+    border-radius:12px; padding:22px 24px; box-shadow:0 20px 60px #000a}
+  .card h2{margin:0 0 3px; font-size:15px; letter-spacing:3px; color:var(--gold)}
+  .card .step{font-size:9px;letter-spacing:2px;color:var(--dim2);margin-bottom:14px}
+  .card p{font-size:14px; line-height:1.6; margin:0 0 11px}
+  .card p.small{font-size:12.5px; color:var(--dim)}
+  .demo{display:flex;align-items:center;justify-content:center;gap:14px;margin:15px 0 16px;flex-wrap:wrap}
+  .dg{display:grid;border:2px solid var(--ink);border-radius:3px;background:#0d0920}
+  .dc{width:42px;height:42px;display:flex;align-items:center;justify-content:center;
+    border-right:1px solid #ffffff1a;border-bottom:1px solid #ffffff1a;
+    font-size:20px;font-weight:800;position:relative;color:var(--ink)}
+  .dc .cl{position:absolute;top:1px;left:3px;font-size:9px;font-weight:900;color:var(--gold)}
+  .dc.wr{border-right:3px solid var(--ink)} .dc.wb{border-bottom:3px solid var(--ink)}
+  .dc.ok{background:#0f2a22;color:var(--ok)}
+  .dc.jk{background:#43213a;color:var(--rot)}
+  .arrow{font-size:13px;color:var(--dim2);font-weight:800}
+  .cardbtns{display:flex;gap:8px;margin-top:4px}
+  .cardbtns button{width:auto;flex:1}
+</style>
+</head>
+<body>
+
+<div id="board">
+  <div id="shaft"></div>
+  <div id="grid"></div>
+  <div id="flash"></div>
+  <div id="say"></div>
+</div>
+
+<div class="side">
+  <h1>CAGE FALL</h1>
+  <div class="tag">A REAL KENKEN. THE NUMBERS FALL INTO IT.<br>GET ONE WRONG AND THE SQUARE IS BRANDED.</div>
+
+  <div class="box">
+    <div class="lab">SCORE</div>
+    <div class="big" id="score">0</div>
+    <div class="r"><span class="k">PUZZLE</span><span class="v" id="pz">1</span></div>
+    <div class="r"><span class="k">SQUARES LEFT</span><span class="v" id="left">16</span></div>
+    <div class="r"><span class="k">BRANDED</span><span class="v" id="scars" style="color:var(--rot)">0</span></div>
+    <div class="r"><span class="k">STACKED ON TOP</span><span class="v" id="junk" style="color:var(--rot)">0</span></div>
+    <div class="r"><span class="k">RUN OF CLEAN DROPS</span><span class="v" id="streak" style="color:var(--ok)">0</span></div>
+  </div>
+
+  <div class="box">
+    <div class="lab">DIFFICULTY</div>
+    <button class="ghost" id="blindBtn" style="font-size:10px;padding:9px">SAFE LANDINGS SHOWN</button>
+    <div style="font-size:10.5px;color:var(--dim2);line-height:1.45;margin-top:6px">
+      Turn the preview off and every correct square pays double.
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="lab">HOLDING &nbsp;<span style="color:var(--dim2)">C</span></div>
+    <div class="q" id="held"></div>
+  </div>
+
+  <div class="box">
+    <div class="lab">FALLING NOW</div>
+    <div class="q" id="queue"></div>
+  </div>
+
+  <div class="box">
+    <div class="lab">CONTROLS</div>
+    <div class="keys">
+      <kbd>&larr;</kbd><kbd>&rarr;</kbd> pick a column<br>
+      <kbd>space</kbd> drop it<br>
+      <kbd>C</kbd> hold it for later<br>
+      <kbd>&uarr;</kbd> turn it &nbsp; <kbd>&darr;</kbd> hurry<br>
+      <kbd>D</kbd> bin this number
+    </div>
+  </div>
+
+  <button id="again">NEW GAME</button>
+  <button class="ghost" id="howto" style="margin-top:7px">HOW TO PLAY</button>
+</div>
+
+<div id="teach">
+  <div class="card">
+    <h2 id="tH"></h2>
+    <div class="step" id="tS"></div>
+    <div id="tBody"></div>
+    <div class="cardbtns">
+      <button class="ghost" id="tBack">BACK</button>
+      <button id="tNext">NEXT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===========================================================================
+// CAGE FALL - a real KenKen at the bottom, a real Tetris stack on top.
+//
+// FOUR REWRITES. The questions that produced this one were: what happens if you
+// put it in the wrong spot, what happens if you duplicate a number in a row,
+// what happens when you complete a row, does it disappear like Tetris. The
+// honest answers about the previous build were: nothing, you cannot, a hundred
+// points, and no. That build had fixed the KenKen half and thrown away the
+// Tetris half - nothing stacked, nothing cleared, you could not lose.
+//
+// SO MISTAKES GOT A BODY.
+//
+// The bottom of the shaft is a real KenKen: generated, then PROVED to have
+// exactly one answer, cages and clues fixed. Above it is open shaft.
+//
+//   - a number that lands where it belongs LOCKS INTO THE PUZZLE
+//   - a number that breaks the row, the column or the cage TURNS TO JUNK and
+//     sits in the shaft above the board, in that column
+//   - junk blocks the column it is in. You cannot drop through it
+//   - junk reaching the top is how you lose
+//   - COMPLETING A ROW BLOWS ONE LAYER OF JUNK OFF EVERY COLUMN
+//
+// That is the Tetris loop, and every part of it is made of KenKen: the stack is
+// your wrong answers, and clearing it is solving. The puzzle itself never
+// vanishes, because it is the thing you are solving. The junk vanishes.
+// ===========================================================================
+
+function $(s){ return document.querySelector(s); }
+function rnd(n){ return Math.floor(Math.random()*n); }
+var MUL = "×", SUB = "−", DIV = "÷";
+var SHAFT = 4;                       // how much junk fits before you are out
+
+var N, sol, cageId, cages, grid, scar, junk, cur, colSel,
+    score, puzzleNo, left, running, heldPiece, fallRow, tickT, blind, streak;
+
+// ---------- a real KenKen, proved unique ----------
+function latin(n){
+  var base=[],i,j,t;
+  for(i=0;i<n;i++) base.push(i+1);
+  for(i=n-1;i>0;i--){ j=rnd(i+1); t=base[i]; base[i]=base[j]; base[j]=t; }
+  var rows=[];
+  for(i=0;i<n;i++){ var row=[]; for(j=0;j<n;j++) row.push(base[(j+i)%n]); rows.push(row); }
+  for(i=n-1;i>0;i--){ j=rnd(i+1); t=rows[i]; rows[i]=rows[j]; rows[j]=t; }
+  var ord=[]; for(i=0;i<n;i++) ord.push(i);
+  for(i=n-1;i>0;i--){ j=rnd(i+1); t=ord[i]; ord[i]=ord[j]; ord[j]=t; }
+  return rows.map(function(r){ return ord.map(function(c){ return r[c]; }); });
+}
+function buildCages(n,s){
+  var id=[],out=[],dirs=[[0,1],[1,0],[0,-1],[-1,0]],r,c,i,j;
+  for(r=0;r<n;r++){ var row=[]; for(c=0;c<n;c++) row.push(-1); id.push(row); }
+  for(r=0;r<n;r++) for(c=0;c<n;c++){
+    if(id[r][c]!==-1) continue;
+    var cid=out.length, cells=[[r,c]]; id[r][c]=cid;
+    var want=2+rnd(2);
+    while(cells.length<want){
+      var opts=[];
+      for(i=0;i<cells.length;i++) for(j=0;j<4;j++){
+        var nr=cells[i][0]+dirs[j][0], nc=cells[i][1]+dirs[j][1];
+        if(nr>=0&&nr<n&&nc>=0&&nc<n&&id[nr][nc]===-1) opts.push([nr,nc]);
+      }
+      if(!opts.length) break;
+      var p=opts[rnd(opts.length)];
+      id[p[0]][p[1]]=cid; cells.push(p);
+    }
+    out.push({id:cid,cells:cells});
+  }
+  // no single-square cages: a square that prints its own answer is not a clue
+  for(var q=out.length-1;q>=0;q--){
+    if(out[q].cells.length!==1) continue;
+    var rr=out[q].cells[0][0], cc=out[q].cells[0][1], best=null;
+    for(i=0;i<4;i++){
+      var ar=rr+dirs[i][0], ac=cc+dirs[i][1];
+      if(ar<0||ar>=n||ac<0||ac>=n) continue;
+      var nb=null;
+      for(j=0;j<out.length;j++) if(out[j].id===id[ar][ac]) nb=out[j];
+      if(!nb||nb.id===out[q].id) continue;
+      if(!best||nb.cells.length<best.cells.length) best=nb;
+    }
+    if(!best) continue;
+    best.cells.push([rr,cc]); id[rr][cc]=best.id; out.splice(q,1);
+  }
+  var remap={}; out.forEach(function(cg,k){ remap[cg.id]=k; cg.id=k; });
+  for(r=0;r<n;r++) for(c=0;c<n;c++) if(remap[id[r][c]]!==undefined) id[r][c]=remap[id[r][c]];
+
+  out.forEach(function(cg){
+    var v=cg.cells.map(function(rc){ return s[rc[0]][rc[1]]; }), sum=0, prod=1, i2;
+    for(i2=0;i2<v.length;i2++){ sum+=v[i2]; prod*=v[i2]; }
+    var opts=[["+",sum],[MUL,prod]];
+    if(v.length===2){
+      var hi=Math.max(v[0],v[1]), lo=Math.min(v[0],v[1]);
+      opts.push([SUB,hi-lo]);
+      if(hi%lo===0) opts.push([DIV,hi/lo]);
+    }
+    var d=null,sb=null;
+    for(i2=0;i2<opts.length;i2++){ if(opts[i2][0]===DIV) d=opts[i2]; if(opts[i2][0]===SUB) sb=opts[i2]; }
+    var pick=(d&&Math.random()<.5)?d:(sb&&Math.random()<.45)?sb:opts[rnd(2)];
+    cg.op=pick[0]; cg.target=pick[1];
+  });
+  return {id:id,cages:out};
+}
+function countSolutions(n,id,cgs,cap,fixed){
+  var g=[],r,c,found=0;
+  for(r=0;r<n;r++){ var row=[]; for(c=0;c<n;c++) row.push(fixed?fixed[r][c]:0); g.push(row); }
+  function exact(cg,v){
+    var i,s=0,p=1;
+    for(i=0;i<v.length;i++){ s+=v[i]; p*=v[i]; }
+    if(cg.op==="+") return s===cg.target;
+    if(cg.op===MUL) return p===cg.target;
+    if(cg.op===SUB) return Math.abs(v[0]-v[1])===cg.target;
+    if(cg.op===DIV) return v[0]/v[1]===cg.target||v[1]/v[0]===cg.target;
+    return false;
+  }
+  function part(cg,v,empty){
+    var i,s=0,p=1;
+    for(i=0;i<v.length;i++){ s+=v[i]; p*=v[i]; }
+    if(cg.op==="+") return s<cg.target && s+empty*n>=cg.target;
+    if(cg.op===MUL) return cg.target%p===0 && p<=cg.target;
+    return true;
+  }
+  function cageOk(cg){
+    var vals=[],empty=0,i;
+    for(i=0;i<cg.cells.length;i++){
+      var v=g[cg.cells[i][0]][cg.cells[i][1]];
+      if(v) vals.push(v); else empty++;
+    }
+    return empty ? part(cg,vals,empty) : exact(cg,vals);
+  }
+  (function rec(k){
+    if(found>=cap) return;
+    if(k===n*n){ found++; return; }
+    var r2=Math.floor(k/n), c2=k%n, i;
+    if(g[r2][c2]){ if(cageOk(cgs[id[r2][c2]])) rec(k+1); return; }
+    for(var v=1;v<=n;v++){
+      var clash=false;
+      for(i=0;i<n;i++) if(g[r2][i]===v||g[i][c2]===v){ clash=true; break; }
+      if(clash) continue;
+      g[r2][c2]=v;
+      if(cageOk(cgs[id[r2][c2]])) rec(k+1);
+      g[r2][c2]=0;
+    }
+  })(0);
+  return found;
+}
+// ===========================================================================
+// FAIRNESS, and it is the whole reason this generator is not three lines.
+//
+// Gravity makes you fill the BOTTOM square of a column first. A KenKen does not
+// care about that: its bottom row is very often the LAST thing you can work
+// out. So a puzzle that is perfectly fair on paper can be impossible HERE, not
+// because it is hard but because the mechanic demands the answers in an order
+// the logic cannot supply. The player waits, bins number after number, and it
+// looks like the game is broken. It was.
+//
+// So a board has to prove it can be solved BOTTOM UP before it is ever shown.
+//
+// Note what is NOT good enough: asking "does placing v still leave a solution".
+// On a one-answer board that is true of exactly one value in every square
+// always, so it would call every puzzle fair while the player stares at a
+// square whose value needs an exhaustive search to find. Fairness has to be
+// measured in HUMAN moves, so the check below uses the two techniques a person
+// actually uses, and nothing cleverer:
+//
+//   NAKED SINGLE   this square has only one value left that fits its row, its
+//                  column, and its cage
+//   HIDDEN SINGLE  this value has only one square left in its row, its column
+//                  or its cage that can still take it
+//
+// A board passes only if, at every single step, at least one REACHABLE square
+// (the lowest gap in some column, which is all gravity will let you touch) can
+// be cracked by one of those two. Anything else is thrown away.
+// ===========================================================================
+
+// which values can still go in (r,c): row, column, and the cage must survive it
+function candsAt(g,n,id,cgs,r,c){
+  var out=[],v,i;
+  for(v=1;v<=n;v++){
+    var clash=false;
+    for(i=0;i<n;i++) if(g[r][i]===v||g[i][c]===v){ clash=true; break; }
+    if(clash) continue;
+    g[r][c]=v;
+    var ok=cageAlive(g,n,cgs[id[r][c]]);
+    g[r][c]=0;
+    if(ok) out.push(v);
+  }
+  return out;
+}
+// can this cage still hit its target, given what is in it and what is free?
+function cageAlive(g,n,cg){
+  var blanks=[],i,ok=false;
+  for(i=0;i<cg.cells.length;i++) if(!g[cg.cells[i][0]][cg.cells[i][1]]) blanks.push(cg.cells[i]);
+  var pick=new Array(blanks.length);
+  (function rec(k){
+    if(ok) return;
+    if(k===blanks.length){
+      var vals=cg.cells.map(function(rc){
+        var v=g[rc[0]][rc[1]];
+        if(v) return v;
+        for(var j=0;j<blanks.length;j++) if(blanks[j][0]===rc[0]&&blanks[j][1]===rc[1]) return pick[j];
+        return 0;
+      });
+      var s2=0,p2=1,i2;
+      for(i2=0;i2<vals.length;i2++){ s2+=vals[i2]; p2*=vals[i2]; }
+      if(cg.op==="+") ok=(s2===cg.target);
+      else if(cg.op===MUL) ok=(p2===cg.target);
+      else if(cg.op===SUB) ok=(Math.abs(vals[0]-vals[1])===cg.target);
+      else if(cg.op===DIV) ok=(vals[0]/vals[1]===cg.target||vals[1]/vals[0]===cg.target);
+      return;
+    }
+    var rc=blanks[k];
+    for(var v=1;v<=n && !ok;v++){
+      var bad=false,i3;
+      for(i3=0;i3<n;i3++) if(g[rc[0]][i3]===v||g[i3][rc[1]]===v){ bad=true; break; }
+      for(i3=0;i3<k && !bad;i3++)
+        if((blanks[i3][0]===rc[0]||blanks[i3][1]===rc[1]) && pick[i3]===v) bad=true;
+      if(bad) continue;
+      pick[k]=v; g[rc[0]][rc[1]]=v;
+      rec(k+1);
+      g[rc[0]][rc[1]]=0;
+    }
+  })(0);
+  return ok;
+}
+
+// the value a person can PROVE belongs here, or null
+function humanValue(g,n,id,cgs,r,c){
+  var cd=candsAt(g,n,id,cgs,r,c),i,v,j;
+  if(cd.length===1) return cd[0];                       // naked single
+  for(i=0;i<cd.length;i++){
+    v=cd[i];
+    // hidden single in the row
+    var onlyHere=true;
+    for(j=0;j<n;j++){
+      if(j===c||g[r][j]) continue;
+      if(candsAt(g,n,id,cgs,r,j).indexOf(v)>=0){ onlyHere=false; break; }
+    }
+    if(onlyHere) return v;
+    // hidden single in the column
+    onlyHere=true;
+    for(j=0;j<n;j++){
+      if(j===r||g[j][c]) continue;
+      if(candsAt(g,n,id,cgs,j,c).indexOf(v)>=0){ onlyHere=false; break; }
+    }
+    if(onlyHere) return v;
+    // hidden single in the cage
+    var cg=cgs[id[r][c]]; onlyHere=true;
+    for(j=0;j<cg.cells.length;j++){
+      var rr=cg.cells[j][0], cc=cg.cells[j][1];
+      if((rr===r&&cc===c)||g[rr][cc]) continue;
+      if(candsAt(g,n,id,cgs,rr,cc).indexOf(v)>=0){ onlyHere=false; break; }
+    }
+    if(onlyHere) return v;
+  }
+  return null;
+}
+
+// Can it be solved in the order GRAVITY allows, using only those techniques?
+function bottomUpFair(n,id,cgs){
+  var g=[],r,c;
+  for(r=0;r<n;r++){ var row=[]; for(c=0;c<n;c++) row.push(0); g.push(row); }
+  var placed=0, guard=0;
+  while(placed<n*n && guard++<n*n*4){
+    var moved=false;
+    for(c=0;c<n;c++){
+      var lr=-1;
+      for(r=n-1;r>=0;r--) if(!g[r][c]){ lr=r; break; }   // the lowest gap: all you can reach
+      if(lr<0) continue;
+      var v=humanValue(g,n,id,cgs,lr,c);
+      if(v){ g[lr][c]=v; placed++; moved=true; }
+    }
+    if(!moved) return false;      // nothing reachable can be proved: unfair
+  }
+  return placed===n*n;
+}
+
+function newPuzzle(n){
+  var fallback=null;
+  for(var t=0;t<160;t++){
+    var s=latin(n), b=buildCages(n,s);
+    if(countSolutions(n,b.id,b.cages,2)!==1) continue;
+    if(!fallback) fallback={s:s,b:b};
+    if(!bottomUpFair(n,b.id,b.cages)) continue;
+    N=n; sol=s; cageId=b.id; cages=b.cages; return true;
+  }
+  // never seen in testing, but a board is better than a blank screen
+  if(fallback){ N=n; sol=fallback.s; cageId=fallback.b.id; cages=fallback.b.cages; return true; }
+  return false;
+}
+
+// ---------- the rules ----------
+function clueOf(cg){ return cg.target + cg.op; }
+function breaks(r,c,v){
+  var i;
+  for(i=0;i<N;i++) if(grid[r][i]===v) return "row " + (r+1) + " already has a " + v;
+  for(i=0;i<N;i++) if(grid[i][c]===v) return "column " + (c+1) + " already has a " + v;
+  var cg=cages[cageId[r][c]];
+  grid[r][c]=v;
+  var solvable=countSolutions(N,cageId,cages,1,grid);
+  grid[r][c]=0;
+  if(!solvable) return "the " + clueOf(cg) + " cage cannot come out right";
+  return null;
+}
+function landing(c){ for(var r=N-1;r>=0;r--) if(!grid[r][c]) return r; return -1; }
+
+// ONE WELL, TOP TO BOTTOM. Rows 0..SHAFT-1 are open shaft with junk stacked at
+// the bottom of it, resting on the board; SHAFT and below is the KenKen itself.
+// Nothing downstream needs to care which half a row is in.
+function occupied(row,c){
+  if(row<SHAFT) return row >= SHAFT-junk[c];
+  return grid[row-SHAFT][c] !== 0;
+}
+
+// ---------- PIECES: the numbers arrive joined together ----------
+//
+// A big part of Tetris is the SHAPE of the thing coming down, and this game had
+// none: one number, one square, no orientation, no reason for the top of your
+// board to be jagged. So numbers now arrive JOINED - a domino, an L, a line -
+// and land as one rigid body.
+//
+// This makes the game HARDER, which is the point. Every cell of a piece has to
+// be the right answer, so a pair has far fewer legal homes than a single number
+// did, and rotating it changes where those homes are. It also makes the ragged
+// top of the board the central problem: a flat pair spans two columns whose
+// bottoms are at different heights, which is Tetris stack management written in
+// KenKen.
+//
+// AND IT STAYS FAIR, by construction. A piece is never invented and then thrown
+// at you. The board is searched for a placement where EVERY cell of some shape
+// is the correct answer, and the piece is built FROM that placement. So a
+// perfect home always exists. Finding it is your problem, which is the same
+// bargain the bottom-up fairness check makes.
+
+var SHAPES4 = [
+  [[0,0]],
+  [[0,0],[0,1]],
+  [[0,0],[1,0]],
+  [[0,0],[0,1],[0,2]],
+  [[0,0],[1,0],[2,0]],
+  [[0,0],[0,1],[1,0]],
+  [[0,0],[0,1],[1,1]],
+  [[0,0],[1,0],[1,1]],
+  [[0,0],[0,1],[1,0],[1,1]]
+];
+function normP(cells,vals){
+  var r0=Infinity,c0=Infinity,i;
+  for(i=0;i<cells.length;i++){ if(cells[i][0]<r0)r0=cells[i][0]; if(cells[i][1]<c0)c0=cells[i][1]; }
+  var out=[];
+  for(i=0;i<cells.length;i++) out.push([cells[i][0]-r0, cells[i][1]-c0, vals[i]]);
+  out.sort(function(a,b){ return a[0]-b[0]||a[1]-b[1]; });
+  return { cells: out.map(function(x){return [x[0],x[1]];}), vals: out.map(function(x){return x[2];}) };
+}
+function rotP(pc){
+  var cells=[],vals=[],i;
+  for(i=0;i<pc.cells.length;i++){ cells.push([pc.cells[i][1], -pc.cells[i][0]]); vals.push(pc.vals[i]); }
+  return normP(cells,vals);
+}
+
+// can the piece sit with its origin at (row,c0)?
+function canSit(pc,row,c0){
+  for(var i=0;i<pc.cells.length;i++){
+    var r=row+pc.cells[i][0], c=c0+pc.cells[i][1];
+    if(c<0||c>=N) return false;
+    if(r>=SHAFT+N) return false;
+    if(r>=0 && occupied(r,c)) return false;
+  }
+  return true;
+}
+// where it comes to rest if dropped from (row,c0)
+function restFor(pc,row,c0){
+  if(!canSit(pc,row,c0)) return null;
+  var r=row;
+  while(canSit(pc,r+1,c0)) r++;
+  return r;
+}
+
+// would landing here leave an empty square with something on top of it?
+function buriesSquare(pc,rest,c0){
+  var take={},i;
+  for(i=0;i<pc.cells.length;i++) take[(rest+pc.cells[i][0])+","+(c0+pc.cells[i][1])]=1;
+  for(var c=0;c<N;c++){
+    var seenFilled=false;
+    for(var r=SHAFT;r<SHAFT+N;r++){
+      var full = grid[r-SHAFT][c]!==0 || take[r+","+c];
+      if(full) seenFilled=true;
+      else if(seenFilled) return true;   // an empty square under a filled one
+    }
+  }
+  return false;
+}
+
+// every placement of this shape where EVERY cell is the right answer
+function perfectSpots(shape){
+  var out=[], o, i, c0;
+  var pc={cells:shape.slice(),vals:shape.map(function(){return 0;})};
+  for(o=0;o<4;o++){
+    for(c0=-3;c0<N;c0++){
+      var rest=restFor(pc,0,c0);
+      if(rest===null) continue;
+      var ok=true, vals=[];
+      for(i=0;i<pc.cells.length;i++){
+        var r=rest+pc.cells[i][0], c=c0+pc.cells[i][1];
+        if(r<SHAFT){ ok=false; break; }           // must come to rest inside the puzzle
+        vals.push(sol[r-SHAFT][c]);
+      }
+      // AND IT MUST NOT BURY A SQUARE.
+      //
+      // A piece that straddles two columns whose stacks are at different
+      // heights rests on the taller one and leaves a gap underneath. Gravity
+      // can never reach that gap again, so the puzzle becomes unfinishable.
+      // That is Tetris's overhang, and it is a real and interesting danger, but
+      // the GAME must never be the one that forces it: what is guaranteed here
+      // is that a hole-free home always exists. Making a hole anyway is the
+      // player's mistake, and it is punished by the board it ruins.
+      if(ok && buriesSquare(pc,rest,c0)) ok=false;
+      if(ok) out.push({ cells: pc.cells.map(function(x){return x.slice();}), vals: vals, rot:o, c0:c0 });
+    }
+    pc=rotP(pc);
+  }
+  return out;
+}
+
+function newPiece(){
+  // HOW BIG, and the first attempt got this badly wrong. Taking the biggest
+  // shape that had a perfect home meant an average piece of 3.6 squares on a
+  // 16 square board: a quarter of the puzzle at a time, the holes left behind
+  // were scattered, and only one run in six could finish. A shape has to be
+  // big enough to be a shape and small enough to leave the board workable.
+  //
+  // Pairs are the staple, threes are the event, and a lone number is the relief
+  // that lets an awkward gap be filled at all.
+  var want;
+  var roll=Math.random();
+  if(N<=4) want = roll<0.20 ? 1 : roll<0.80 ? 2 : 3;
+  else      want = roll<0.15 ? 1 : roll<0.65 ? 2 : roll<0.93 ? 3 : 4;
+  var order=[want];
+  for(var d=1;d<4;d++){ order.push(want-d); order.push(want+d); }
+
+  for(var k=0;k<order.length;k++){
+    var sz=order[k];
+    if(sz<1 || sz>4 || sz>left) continue;
+    var bag=[],i;
+    for(i=0;i<SHAPES4.length;i++) if(SHAPES4[i].length===sz) bag.push(SHAPES4[i]);
+    for(i=bag.length-1;i>0;i--){ var j=rnd(i+1); var t=bag[i]; bag[i]=bag[j]; bag[j]=t; }
+    for(i=0;i<bag.length;i++){
+      var spots=perfectSpots(bag[i]);
+      if(!spots.length) continue;
+      var pick=spots[rnd(spots.length)];
+      return normP(pick.cells, pick.vals);
+    }
+  }
+  return null;
+}
+
+// THE FALL. A piece coming down on its own is what gives every choice a
+// deadline; without it you could stare at a board for an hour.
+function restartTick(){
+  clearInterval(tickT);
+  if(running) tickT=setInterval(fallStep, speed());
+}
+function speed(){ return Math.max(320, 1500 - (puzzleNo-1)*160 - Math.floor(streak/4)*60); }
+function fallStep(){
+  if(!running || !cur) return;
+  if(canSit(cur,fallRow+1,colSel)) { fallRow++; draw(); return; }
+  land();
+}
+
+function next(){
+  if(left<=0) return solved();
+  cur=newPiece();
+  if(!cur) return dead("No piece can be placed.");
+  colSel=0; fallRow=0;
+  var g=0;
+  while(g<N && restFor(cur,0,colSel)===null){ colSel=(colSel+1)%N; g++; }
+  restartTick();
+  draw();
+}
+
+function start(n){
+  if(!newPuzzle(n)){ say("could not build a puzzle. press NEW GAME",true); return; }
+  grid=[]; scar=[]; junk=[];
+  for(var r=0;r<N;r++){ var row=[],sr=[]; for(var c=0;c<N;c++){ row.push(0); sr.push(false); } grid.push(row); scar.push(sr); }
+  for(var c2=0;c2<N;c2++) junk.push(0);
+  left=N*N; running=true; heldPiece=null; streak=0; colSel=0; fallRow=0;
+  next();
+  say("");
+  restartTick();
+  draw();
+}
+
+// ---------- dropping ----------
+// turning is the other half of a shape mattering: the same two numbers stood up
+// instead of laid flat land in completely different squares
+function turn(){
+  if(!running) return;
+  var t=rotP(cur), ks=[0,-1,1,-2,2], i;
+  for(i=0;i<ks.length;i++) if(canSit(t,fallRow,colSel+ks[i])){ cur=t; colSel+=ks[i]; draw(); return; }
+}
+function drop(){
+  if(!running) return;
+  var r=restFor(cur,fallRow,colSel);
+  if(r===null) return;
+  fallRow=r; draw(); land();
+}
+
+function land(){
+  if(!running) return;
+  var i, msgs=[], spoiled=[], cleared=0, anyBrand=false, filledRows={}, filledCols={}, filledCages={};
+
+  // every cell of the piece is judged where it came to rest
+  for(i=0;i<cur.cells.length;i++){
+    var row=fallRow+cur.cells[i][0], c=colSel+cur.cells[i][1], v=cur.vals[i];
+    if(row<SHAFT){
+      // OVERFLOW: this part of the piece never reached the puzzle
+      junk[c]++; streak=0; score=Math.max(0,score-15);
+      say("Column " + (c+1) + " is full. Part of it stacked up on top.",true);
+      flash("OVERFLOW","var(--rot)");
+      if(junk[c]>=SHAFT){ return dead("The shaft filled up."); }
+      continue;
+    }
+    var r=row-SHAFT;
+    var why=breaks(r,c,v);
+    if(why){
+      grid[r][c]=sol[r][c]; scar[r][c]=true; left--; anyBrand=true; streak=0;
+      score=Math.max(0,score-40);
+      say("Wrong. " + why + ".<br>That square is branded: it shows the right number and now pays nothing.",true);
+    } else {
+      grid[r][c]=v; left--; streak++;
+      score += Math.round(25*(blind?2:1));
+    }
+    filledRows[r]=1; filledCols[c]=1; filledCages[cageId[r][c]]=1;
+  }
+
+  if(anyBrand){
+    flash("BRANDED","var(--rot)");
+    if(brandCount() >= N) return dead("Too much of the board is branded to be worth finishing.");
+  }
+
+  // now see what that completed
+  for(var rk in filledRows){ var rr=+rk;
+    if(rowDone(rr)){ if(rowClean(rr)){ score+=150; msgs.push("row "+(rr+1)); cleared+=clearJunk(N); } else spoiled.push("row "+(rr+1)); } }
+  for(var ck in filledCols){ var cc2=+ck;
+    if(colDone(cc2)){ if(colClean(cc2)){ score+=150; msgs.push("column "+(cc2+1)); cleared+=clearJunk(1); } else spoiled.push("column "+(cc2+1)); } }
+  for(var gk in filledCages){ var cg=cages[+gk];
+    if(cageDone(cg)){ if(cageClean(cg)){ score+=60; msgs.push(clueOf(cg)+" cage"); cleared+=clearJunk(1); } else spoiled.push("the "+clueOf(cg)+" cage"); } }
+
+  if(msgs.length){
+    flash(msgs.join("  ").toUpperCase(),"var(--ok)");
+    say(msgs.join(" and ") + " done." + (cleared ? "  " + cleared + " blown off the top." : ""));
+  } else if(spoiled.length && !anyBrand){
+    say(spoiled.join(" and ") + " finished, but a branded square is in it. No score, no clearing.",true);
+  } else if(!anyBrand) say("");
+
+  if(left<=0) return solved();
+  next();
+}
+
+function brandCount(){
+  var n=0;
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++) if(scar[r][c]) n++;
+  return n;
+}
+
+// A CLEARED ROW BLOWS JUNK OFF EVERY COLUMN. This is the line clear: the thing
+// you cleared is a KenKen row, and what disappears is your own wrong answers.
+function clearJunk(power){
+  var n=0;
+  for(var c=0;c<N;c++){
+    for(var k=0;k<power && junk[c]>0;k++){ junk[c]--; n++; }
+  }
+  return n;
+}
+function rowDone(r){ for(var c=0;c<N;c++) if(!grid[r][c]) return false; return true; }
+// CLEAN means no branded square in it. A branded row seals and pays nothing.
+function rowClean(r){ for(var c=0;c<N;c++) if(scar[r][c]) return false; return true; }
+function colClean(c){ for(var r=0;r<N;r++) if(scar[r][c]) return false; return true; }
+function cageClean(cg){ for(var i=0;i<cg.cells.length;i++) if(scar[cg.cells[i][0]][cg.cells[i][1]]) return false; return true; }
+function colDone(c){ for(var r=0;r<N;r++) if(!grid[r][c]) return false; return true; }
+function cageDone(cg){ for(var i=0;i<cg.cells.length;i++) if(!grid[cg.cells[i][0]][cg.cells[i][1]]) return false; return true; }
+
+// HOLD, and it is here because the measurement demanded it. Playing honestly,
+// only ever dropping a number that can be PROVED, 43% of arrivals had to be
+// binned: the square you can prove wants a 4 and a 2 keeps turning up. That is
+// not difficulty, it is waiting. Tetris solved this thirty years ago. Park one
+// number, get it back when it is the one you need.
+function hold(){
+  if(!running) return;
+  if(heldPiece===null){ heldPiece=cur; next(); }
+  else { var t=heldPiece; heldPiece=cur; cur=t; fallRow=0;
+    var g=0; while(g<N && restFor(cur,0,colSel)===null){ colSel=(colSel+1)%N; g++; }
+    restartTick(); }
+  say(""); draw();
+}
+function bin(){
+  if(!running) return;
+  score=Math.max(0,score-5);
+  say("Binned. A new piece is on its way.");
+  next();
+}
+function solved(){
+  running=false; clearInterval(tickT);
+  score+=500;
+  var t=0,r2,c2;
+  for(c2=0;c2<N;c2++) t+=junk[c2];
+  for(r2=0;r2<N;r2++) for(c2=0;c2<N;c2++) if(scar[r2][c2]) t++;
+  if(!t) score+=250;
+  flash("SOLVED","var(--ok)");
+  say("Puzzle solved. +500" + (t?"":" and +250 for an unbranded board") + ".");
+  puzzleNo++;
+  setTimeout(function(){ start(puzzleNo>=3?5:4); }, 1900);
+  draw();
+}
+function dead(why){
+  running=false; clearInterval(tickT);
+  flash("BURIED","var(--rot)");
+  say((why||"The shaft filled up.") + " Score " + score + ".<br>Press NEW GAME.",true);
+  draw();
+}
+
+function say(h,bad){ var e=$("#say"); e.innerHTML=h||""; e.className=bad?"no":""; }
+function flash(t,col){ var f=$("#flash"); f.textContent=t; f.style.color=col;
+  f.className=""; void f.offsetWidth; f.className="go"; }
+
+// ---------- draw ----------
+function pieceMini(pc,col){
+  var rows=0,cols=0,i;
+  for(i=0;i<pc.cells.length;i++){ if(pc.cells[i][0]+1>rows)rows=pc.cells[i][0]+1; if(pc.cells[i][1]+1>cols)cols=pc.cells[i][1]+1; }
+  var at={};
+  for(i=0;i<pc.cells.length;i++) at[pc.cells[i][0]+","+pc.cells[i][1]]=pc.vals[i];
+  var h='<div style="display:grid;gap:2px;grid-template-columns:repeat('+cols+',26px)">';
+  for(var r=0;r<rows;r++) for(var c=0;c<cols;c++){
+    var v=at[r+","+c];
+    h+= v===undefined
+      ? '<div style="width:26px;height:26px"></div>'
+      : '<div style="width:26px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;background:#241c07;border:1px solid '+col+';color:'+col+'">'+v+'</div>';
+  }
+  return h+'</div>';
+}
+function draw(){
+  var r,c,i,html="";
+  // the shaft: junk stacks upward from just above the board
+  $("#shaft").style.gridTemplateColumns="repeat("+N+",52px)";
+  var liveShaft={}, colHit={};
+  if(running && cur) for(i=0;i<cur.cells.length;i++) colHit[colSel+cur.cells[i][1]]=1;
+  if(running && cur) for(i=0;i<cur.cells.length;i++){
+    var sr=fallRow+cur.cells[i][0], sc=colSel+cur.cells[i][1];
+    if(sr<SHAFT) liveShaft[sr+","+sc]=cur.vals[i];
+  }
+  for(r=0;r<SHAFT;r++) for(c=0;c<N;c++){
+    var isJunk=occupied(r,c);
+    var cls="s";
+    if(isJunk) cls+=" junk";
+    else if(colHit[c]) cls+=" col";
+    var inner="";
+    if(!isJunk && running && cur && liveShaft[r+","+c]!==undefined){ cls+=" fallnum"; inner="<b>"+liveShaft[r+","+c]+"</b>"; }
+    html+='<div class="'+cls+'">'+inner+'</div>';
+  }
+  $("#shaft").innerHTML=html;
+
+  // where the piece will come to rest, and what each of its cells would do there
+  var ghostRow=(running&&cur)?restFor(cur,fallRow,colSel):null;
+  var live={}, ghost={};
+  if(running && cur){
+    for(i=0;i<cur.cells.length;i++){
+      var lr=fallRow+cur.cells[i][0], lc=colSel+cur.cells[i][1];
+      live[lr+","+lc]=cur.vals[i];
+      if(ghostRow!==null){
+        var gr2=ghostRow+cur.cells[i][0];
+        if(gr2>=SHAFT) ghost[(gr2-SHAFT)+","+lc]={v:cur.vals[i],
+          bad: blind ? false : !!breaks(gr2-SHAFT,lc,cur.vals[i])};
+      }
+    }
+  }
+
+  html="";
+  for(r=0;r<N;r++) for(c=0;c<N;c++){
+    var cg=cages[cageId[r][c]], cls2="c";
+    if(c===N-1||cageId[r][c+1]!==cageId[r][c]) cls2+=" wr";
+    if(r===N-1||cageId[r+1][c]!==cageId[r][c]) cls2+=" wb";
+    var lk=(r+SHAFT)+","+c, gk=r+","+c;
+    if(scar[r][c]) cls2+=" scar";
+    else if(grid[r][c]) cls2+= (rowDone(r)&&rowClean(r))||(colDone(c)&&colClean(c))||(cageDone(cg)&&cageClean(cg)) ? " sealed" : " filled";
+    else if(live[lk]!==undefined) cls2+=" fallcell";
+    else if(ghost[gk]) cls2+= ghost[gk].bad ? " aimbad" : (blind ? " aimblind" : " aim");
+    var inner2="";
+    if(cg.cells[0][0]===r&&cg.cells[0][1]===c) inner2+='<span class="cl">'+clueOf(cg)+'</span>';
+    if(grid[r][c]) inner2+="<b>"+grid[r][c]+"</b>";
+    else if(live[lk]!==undefined) inner2+='<b style="color:var(--gold)">'+live[lk]+'</b>';
+    else if(ghost[gk]) inner2+='<b style="color:'+(ghost[gk].bad?"var(--rot)":"var(--ok)")+';opacity:.55">'+ghost[gk].v+'</b>';
+    html+='<div class="'+cls2+'">'+inner2+'</div>';
+  }
+  $("#grid").style.gridTemplateColumns="repeat("+N+",52px)";
+  $("#grid").innerHTML=html;
+
+  $("#queue").innerHTML = cur ? pieceMini(cur,"var(--gold)") : "";
+  $("#held").innerHTML = heldPiece ? pieceMini(heldPiece,"var(--dim)") : '<div class="qn" style="opacity:.4">-</div>';
+  var sc=0; for(var r3=0;r3<N;r3++) for(var c3=0;c3<N;c3++) if(scar[r3][c3]) sc++;
+  $("#scars").textContent=sc + " / " + N;
+  $("#streak").textContent=streak;
+  $("#blindBtn").textContent = blind ? "BLIND  ·  DOUBLE SCORE" : "SAFE LANDINGS SHOWN";
+  $("#blindBtn").style.color = blind ? "var(--gold)" : "var(--dim)";
+  $("#blindBtn").style.borderColor = blind ? "var(--gold)" : "var(--line)";
+}
+
+window.addEventListener("keydown",function(e){
+  if($("#teach").className.indexOf("off")<0) return;
+  if(["ArrowLeft","ArrowRight","ArrowDown","ArrowUp"," "].indexOf(e.key)>=0) e.preventDefault();
+  if(!running) return;
+  var i;
+  // you may only slide into a column whose pile is not already above you
+  if(e.key==="ArrowLeft"){ if(canSit(cur,fallRow,colSel-1)) colSel--; draw(); }
+  else if(e.key==="ArrowRight"){ if(canSit(cur,fallRow,colSel+1)) colSel++; draw(); }
+  else if(e.key===" ") drop();
+  else if(e.key==="d"||e.key==="D") bin();
+  else if(e.key==="c"||e.key==="C") hold();
+  else if(e.key==="ArrowDown"){ if(canSit(cur,fallRow+1,colSel)){ fallRow++; draw(); } else land(); }
+  else if(e.key==="ArrowUp"){ turn(); }
+});
+
+// ---------- the lesson ----------
+function dg(rows){
+  var n=rows[0].length, h='<div class="dg" style="grid-template-columns:repeat('+n+',42px)">';
+  for(var r=0;r<rows.length;r++) for(var c=0;c<n;c++){
+    var x=rows[r][c];
+    h+='<div class="dc '+(x.k||"")+(x.wr?" wr":"")+(x.wb?" wb":"")+'">'
+      +(x.cl?'<span class="cl">'+x.cl+'</span>':"")+(x.v||"")+'</div>';
+  }
+  return h+'</div>';
+}
+var LESSON=[
+ {h:"THE BOTTOM IS A REAL KENKEN",
+  b:'<p>A proper KenKen, generated and then <b>proved to have exactly one answer</b> before you see it. Thick outlines are <b>cages</b>. Each shows a clue.</p>'
+   +'<div class="demo">'+dg([
+     [{cl:"6"+MUL,wr:1},{wr:1},{cl:"3"+SUB},{wr:1,wb:1}],
+     [{wb:1,wr:1},{cl:"7+",wr:1,wb:1},{wb:1},{wr:1,wb:1}]])+'</div>'
+   +'<p class="small"><b>6'+MUL+'</b> means those squares multiply to 6. <b>7+</b> means they add to 7. Fill every square so every clue is true, no number twice in any row, none twice in any column.</p>'},
+
+ {h:"YOU DO NOT PICK THE SQUARE",
+  b:'<p>Numbers arrive one at a time. You pick <b>which column to drop it down</b>, and it falls to the <b>lowest empty square</b> in that column.</p>'
+   +'<div class="demo">'+dg([
+     [{v:"",k:""},{v:3,k:"ok"},{v:"",k:""},{v:"",k:""}],
+     [{v:2},{v:4},{v:1},{v:3}]])+'</div>'
+   +'<p class="small">That is the squeeze. You cannot put the number where you want it, so you have to find the column whose bottom gap will take it.</p>'},
+
+ {h:"A WRONG DROP BRANDS THE SQUARE",
+  b:'<p>Drop a number that repeats in its row, repeats in its column, or breaks its cage, and it lands anyway. The square is <b style="color:var(--rot)">branded</b>: it shows you the right number, and it is spoiled.</p>'
+   +'<div class="demo">'+dg([
+     [{v:2},{v:4,k:"jk"},{v:1},{v:3}]])+'</div>'
+   +'<p>You keep the number, so the puzzle can always be finished. What you lose is worth more: <b>a row, column or cage holding a branded square pays nothing and clears nothing</b>, for the rest of the board.</p>'
+   +'<p class="small">Brand four squares and the board is too corrupt to be worth finishing. That is how you lose.</p>'},
+
+ {h:"CLEARING A ROW BLOWS THE JUNK OFF",
+  b:'<p>Finish a <b>row</b> of the KenKen and <b>one layer of junk is blown off every column</b>. Finish a cage or a column and one block goes.</p>'
+   +'<div class="demo">'+dg([[{v:"",k:"jk"},{v:"",k:"jk"},{v:"",k:""},{v:"",k:"jk"}]])
+   +'<span class="arrow">ROW DONE &#8594;</span>'
+   +dg([[{v:"",k:""},{v:"",k:""},{v:"",k:""},{v:"",k:""}]])+'</div>'
+   +'<p><b>That is the line clear.</b> Only a <b>clean</b> row does it: one with a branded square in it seals and gives you nothing.</p>'
+   +'<p class="small">Junk only ever appears one way: drop into a column of the puzzle that is already <b>full</b> and the number stacks up above the board instead. Clear a clean row to blow it off.</p>'
+   +'<p class="small">If a number is no use yet, press <kbd>C</kbd> to <b>hold</b> it and get it back when you want it, or <kbd>D</kbd> to bin it and let it come round again. Both cost far less than junk.</p>'}
+];
+var li=0;
+function showLesson(){
+  var L=LESSON[li];
+  $("#tH").textContent=L.h;
+  $("#tS").textContent="STEP "+(li+1)+" OF "+LESSON.length;
+  $("#tBody").innerHTML=L.b;
+  $("#tBack").style.visibility=li?"visible":"hidden";
+  $("#tNext").textContent=(li===LESSON.length-1)?"PLAY":"NEXT";
+}
+$("#tNext").onclick=function(){
+  if(li<LESSON.length-1){ li++; showLesson(); return; }
+  $("#teach").className="off"; score=0; puzzleNo=1; start(4);
+};
+$("#tBack").onclick=function(){ if(li){ li--; showLesson(); } };
+$("#howto").onclick=function(){ li=0; showLesson(); $("#teach").className=""; running=false; };
+$("#again").onclick=function(){ score=0; puzzleNo=1; start(4); };
+$("#blindBtn").onclick=function(){ blind=!blind; draw(); };
+window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
+
+score=0; puzzleNo=1; blind=false; start(4); running=false; clearInterval(tickT); showLesson();
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>THE THREAD</title>
+<link rel="stylesheet" href="_shell.css">
+<style>
+  #grid{display:grid;background:#0d0920;border:3px solid var(--info);border-radius:6px;
+    box-shadow:0 0 34px #22e0ff22}
+  .c{width:56px;height:56px;display:flex;align-items:center;justify-content:center;
+    border-right:1px solid #ffffff12;border-bottom:1px solid #ffffff12;
+    font-size:20px;font-weight:800;cursor:pointer;position:relative}
+  .c.given{background:#1a2340;color:var(--info)}
+  .c.mine{background:#132b24;color:var(--ok)}
+  .c.sel{box-shadow:inset 0 0 0 2px var(--gold)}
+  .c.hint{background:#241c07}
+  .c.wrong{background:#3a1226;color:var(--rot)}
+  .pad{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;max-width:290px}
+  .pad button{width:auto;flex:0 0 auto;min-width:40px;padding:9px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div>
+  <div id="grid"></div>
+  <div id="say"></div>
+</div>
+<div class="side">
+  <h1>THE THREAD</h1>
+  <div class="tag">JOIN 1 TO THE END, STEP BY STEP.<br>EVERY STEP TOUCHES THE LAST, EVEN CORNERS.</div>
+  <div class="box">
+    <div class="lab">FILLED</div><div class="big" id="filled">0</div>
+    <div class="r"><span class="k">OF</span><span class="v" id="total">36</span></div>
+    <div class="r"><span class="k">NEXT NUMBER</span><span class="v" id="next" style="color:var(--ok)">2</span></div>
+  </div>
+  <div class="box">
+    <div class="lab">HOW IT WORKS</div>
+    <div style="font-size:11.5px;color:var(--dim);line-height:1.6">
+      Numbers run <b style="color:var(--ok)">1, 2, 3</b> and on, and each one must sit in a square
+      <b>touching</b> the one before, including diagonally.
+      Some are printed. Fill the rest.
+    </div>
+  </div>
+  <button id="again">NEW THREAD</button>
+  <button class="ghost" id="undo" style="margin-top:7px">TAKE ONE BACK</button>
+</div>
+<script>
+// THE THREAD - Hidato. A snake of consecutive numbers through every square,
+// each step touching the last including diagonally.
+//
+// It earns its place in this arcade by being the one puzzle here with NO
+// arithmetic at all: it is pure adjacency and ordering. Somebody who bounces
+// off KenKen's sums can still read this instantly, which is exactly what a
+// mixed cabinet is for.
+var $=function(s){return document.querySelector(s);};
+var W=6,H=6,TOT=W*H;
+var sol,given,cell,sel,history;
+
+function idx(x,y){return y*W+x;}
+function nbrs(i){
+  var x=i%W,y=(i/W)|0,out=[],dx,dy;
+  for(dy=-1;dy<=1;dy++) for(dx=-1;dx<=1;dx++){
+    if(!dx&&!dy) continue;
+    var nx=x+dx,ny=y+dy;
+    if(nx<0||ny<0||nx>=W||ny>=H) continue;
+    out.push(idx(nx,ny));
+  }
+  return out;
+}
+// a Hamiltonian path by backtracking, with neighbours tried in random order.
+// Warnsdorff-ish: fewest onward options first, which makes success common.
+function makePath(){
+  for(var attempt=0;attempt<400;attempt++){
+    var start=Math.floor(Math.random()*TOT);
+    var seen=new Array(TOT).fill(false), path=[];
+    var ok=(function walk(i,depth){
+      seen[i]=true; path.push(i);
+      if(depth===TOT) return true;
+      var ns=nbrs(i).filter(function(n){return !seen[n];});
+      ns.sort(function(a,b){
+        var ca=nbrs(a).filter(function(n){return !seen[n];}).length;
+        var cb=nbrs(b).filter(function(n){return !seen[n];}).length;
+        return (ca-cb) || (Math.random()<0.5?-1:1);
+      });
+      for(var k=0;k<ns.length;k++) if(walk(ns[k],depth+1)) return true;
+      seen[i]=false; path.pop(); return false;
+    })(start,1);
+    if(ok) return path;
+  }
+  return null;
+}
+function reset(){
+  var path=makePath();
+  if(!path){ say("could not lay a thread. press NEW THREAD",true); return; }
+  sol=new Array(TOT);
+  for(var k=0;k<path.length;k++) sol[path[k]]=k+1;
+  // GIVENS: the ends always, plus a scattering. Enough that the thread can be
+  // picked up in several places rather than only followed from 1.
+  given=new Array(TOT).fill(false);
+  for(var i=0;i<TOT;i++) if(sol[i]===1||sol[i]===TOT) given[i]=true;
+  var want=Math.round(TOT*0.34);
+  var tries=0;
+  while(tries++<500){
+    var g=0; for(i=0;i<TOT;i++) if(given[i]) g++;
+    if(g>=want) break;
+    var pick=Math.floor(Math.random()*TOT);
+    given[pick]=true;
+  }
+  cell=new Array(TOT).fill(0);
+  for(i=0;i<TOT;i++) if(given[i]) cell[i]=sol[i];
+  sel=-1; history=[];
+  say("");
+  draw();
+}
+function nextNeeded(){
+  for(var v=1;v<=TOT;v++){
+    var found=false;
+    for(var i=0;i<TOT;i++) if(cell[i]===v){found=true;break;}
+    if(!found) return v;
+  }
+  return TOT+1;
+}
+function place(i,v){
+  if(given[i]) { say("That one is printed.",true); return; }
+  // the rules, checked out loud so a wrong move teaches something
+  var prev=-1,next=-1,j;
+  for(j=0;j<TOT;j++){ if(cell[j]===v-1) prev=j; if(cell[j]===v+1) next=j; }
+  if(prev>=0 && nbrs(i).indexOf(prev)<0){ say(v+" has to touch "+(v-1)+".",true); flashWrong(i); return; }
+  if(next>=0 && nbrs(i).indexOf(next)<0){ say(v+" has to touch "+(v+1)+".",true); flashWrong(i); return; }
+  for(j=0;j<TOT;j++) if(cell[j]===v && j!==i){ say(v+" is already on the board.",true); flashWrong(i); return; }
+  history.push({i:i,was:cell[i]});
+  cell[i]=v;
+  say("");
+  draw();
+  var done=true;
+  for(j=0;j<TOT;j++) if(!cell[j]) done=false;
+  if(done){
+    var right=true;
+    for(j=0;j<TOT;j++) if(cell[j]!==sol[j]) right=false;
+    say(right?"The thread is whole.":"Full, but the thread breaks somewhere. Take some back.",!right);
+  }
+}
+function flashWrong(i){
+  var d=document.querySelectorAll(".c")[i];
+  if(d){ d.className+=" wrong"; setTimeout(function(){ draw(); },380); }
+}
+function say(t,bad){ var e=$("#say"); e.textContent=t||""; e.className=bad?"no":""; }
+function draw(){
+  $("#grid").style.gridTemplateColumns="repeat("+W+",56px)";
+  var h="",i;
+  var need=nextNeeded();
+  for(i=0;i<TOT;i++){
+    var cls="c";
+    if(given[i]) cls+=" given";
+    else if(cell[i]) cls+=" mine";
+    if(i===sel) cls+=" sel";
+    // light the squares where the next number could legally go
+    if(!cell[i] && need<=TOT){
+      var prev=-1,j;
+      for(j=0;j<TOT;j++) if(cell[j]===need-1) prev=j;
+      if(prev>=0 && nbrs(i).indexOf(prev)>=0) cls+=" hint";
+    }
+    h+='<div class="'+cls+'" data-i="'+i+'">'+(cell[i]||"")+'</div>';
+  }
+  $("#grid").innerHTML=h;
+  var f=0;for(i=0;i<TOT;i++) if(cell[i]) f++;
+  $("#filled").textContent=f;
+  $("#total").textContent=TOT;
+  $("#next").textContent=need<=TOT?need:"-";
+}
+$("#grid").addEventListener("click",function(e){
+  var d=e.target.closest(".c"); if(!d) return;
+  var i=+d.dataset.i;
+  sel=i;
+  var need=nextNeeded();
+  if(need<=TOT) place(i,need); else draw();
+});
+$("#undo").onclick=function(){
+  var h=history.pop();
+  if(!h){ say("Nothing to take back."); return; }
+  cell[h.i]=h.was; say(""); draw();
+};
+$("#again").onclick=reset;
+window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
+reset();
+</script>
+</body>
+</html>
