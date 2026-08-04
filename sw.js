@@ -1,7 +1,7 @@
 /* KenKen Dungeon service worker.
    Navigations are network-first so new builds always arrive; hashed assets and art
    are cache-first for instant loads and offline play. */
-const CACHE = "kkd-259";
+const CACHE = "kkd-260";
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./index.html", "./manifest.webmanifest"])).then(() => self.skipWaiting()));
 });
