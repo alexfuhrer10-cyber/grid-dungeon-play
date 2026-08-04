@@ -18,6 +18,7 @@
   .c.peer{background:#ffffff08}
   .c.same{background:#1b2a44}
   .c.bad{color:var(--rot)}
+  .nt{font-size:9px;font-weight:800;color:var(--myst);letter-spacing:1px;line-height:1}
   .pad{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px;width:378px}
   .pad button{width:auto;flex:1 1 36px;padding:12px 0;font-size:16px;
     border-color:var(--info);color:var(--info);background:#12233a}
@@ -43,6 +44,7 @@
     <div class="keys">
       click a square, then a number<br>
       <kbd>1</kbd>-<kbd>9</kbd> type &nbsp; <kbd>del</kbd> rub out<br>
+      <kbd>N</kbd> pencil mode &nbsp; <kbd>shift</kbd>+digit<br>
       arrows move
     </div>
   </div>
@@ -61,7 +63,7 @@
 // a removal ONLY while the puzzle still has exactly one answer. That is the same
 // law the rest of the game holds itself to.
 var $=function(s){return document.querySelector(s);};
-var sol,given,cell,sel,miss,level;
+var sol,given,cell,sel,miss,level,notes,noting;
 var LEVELS=[{n:"EASY",keep:42},{n:"STEADY",keep:34},{n:"HARD",keep:28}];
 
 function rowOf(i){return (i/9)|0;} function colOf(i){return i%9;}
@@ -130,11 +132,21 @@ function reset(){
   }
   given=g.map(function(v){return v!==0;});
   cell=g.slice();
-  sel=-1; miss=0;
+  sel=-1; miss=0; notes={}; noting=false;
   say(""); draw();
 }
 function put(v){
   if(sel<0||given[sel]) return;
+  // PENCIL MARKS. Nobody solves a real Sudoku without them: past the easy
+  // eliminations the whole technique is holding two or three candidates in a
+  // square and looking for the one that cannot survive elsewhere. Without them
+  // this was a game you could only play at the level where you never need them.
+  if(noting && v){
+    if(cell[sel]) return;
+    notes[sel]=notes[sel]||{};
+    if(notes[sel][v]) delete notes[sel][v]; else notes[sel][v]=1;
+    draw(); return;
+  }
   if(v===0){ cell[sel]=0; say(""); draw(); return; }
   if(v!==sol[sel]){
     miss++; say("That breaks the row, the column or the box.",true);
@@ -142,7 +154,11 @@ function put(v){
     setTimeout(function(){ if(cell[sel]!==sol[sel]) { cell[sel]=0; draw(); } },520);
     return;
   }
-  cell[sel]=v; say(""); draw();
+  cell[sel]=v; delete notes[sel];
+  // a placed number clears that pencil mark from everything it can see
+  var ps=peers(sel);
+  for(var q=0;q<ps.length;q++) if(notes[ps[q]]) delete notes[ps[q]][v];
+  say(""); draw();
   var done=true;
   for(var i=0;i<81;i++) if(!cell[i]) done=false;
   if(done) say("Solved with "+miss+" mistake"+(miss===1?"":"s")+".");
@@ -161,7 +177,12 @@ function draw(){
     else if(sel>=0&&ps.indexOf(i)>=0) cls+=" peer";
     if(selV&&cell[i]===selV&&i!==sel) cls+=" same";
     if(cell[i]&&cell[i]!==sol[i]) cls+=" bad";
-    h+='<div class="'+cls+'" data-i="'+i+'">'+(cell[i]||"")+'</div>';
+    var inner=cell[i]||"";
+    if(!cell[i]&&notes[i]){
+      var ns=Object.keys(notes[i]);
+      if(ns.length) inner='<span class="nt">'+ns.sort().join("")+'</span>';
+    }
+    h+='<div class="'+cls+'" data-i="'+i+'">'+inner+'</div>';
   }
   $("#grid").innerHTML=h;
   var e=0; for(i=0;i<81;i++) if(!cell[i]) e++;
@@ -169,6 +190,10 @@ function draw(){
   $("#miss").textContent=miss;
   $("#diff").textContent=LEVELS[level].n;
   $("#harder").textContent="DIFFICULTY: "+LEVELS[level].n;
+  var nb=$("#noteBtn");
+  if(nb){ nb.textContent = noting ? "PENCIL ON" : "PENCIL";
+    nb.style.color = noting ? "var(--myst)" : "var(--dim)";
+    nb.style.borderColor = noting ? "var(--myst)" : "var(--line)"; }
 }
 $("#grid").addEventListener("click",function(e){
   var d=e.target.closest(".c"); if(!d) return;
@@ -178,13 +203,17 @@ $("#grid").addEventListener("click",function(e){
   var h="",v;
   for(v=1;v<=9;v++) h+='<button data-v="'+v+'">'+v+'</button>';
   h+='<button class="era" data-v="0">RUB OUT</button>';
+  h+='<button class="era" id="noteBtn">PENCIL</button>';
   $("#pad").innerHTML=h;
   $("#pad").addEventListener("click",function(e){
-    var b=e.target.closest("button"); if(!b) return; put(+b.dataset.v);
+    var b=e.target.closest("button"); if(!b) return;
+    if(b.id==="noteBtn"){ noting=!noting; draw(); return; }
+    put(+b.dataset.v);
   });
 })();
 window.addEventListener("keydown",function(e){
-  if(/^[1-9]$/.test(e.key)) { put(+e.key); return; }
+  if(e.key==="n"||e.key==="N"){ noting=!noting; draw(); return; }
+  if(/^[1-9]$/.test(e.key)) { if(e.shiftKey){ var was=noting; noting=true; put(+e.key); noting=was; } else put(+e.key); return; }
   if(e.key==="Backspace"||e.key==="Delete"){ put(0); return; }
   if(sel<0) return;
   var r=rowOf(sel),c=colOf(sel);

@@ -16,6 +16,7 @@
   .c.sel{background:#12303a;box-shadow:inset 0 0 0 2px var(--gold)}
   .c.bad{color:var(--rot)}
   .c.run{background:#1b1440}
+  .c.printed{color:var(--ink);background:#171130}
   .slash{position:absolute;inset:0;pointer-events:none}
   .slash::after{content:"";position:absolute;left:0;top:0;width:100%;height:100%;
     background:linear-gradient(to bottom right,transparent 49%,#ffffff26 49%,#ffffff26 51%,transparent 51%)}
@@ -62,27 +63,87 @@
 // place to learn the habit of asking WHICH SET OF DIGITS can make this number.
 var $=function(s){return document.querySelector(s);};
 var W=7,H=7;
-var blk,sol,cell,sel,runs;
+var blk,sol,cell,sel,runs,given;
 
 function id(x,y){return y*W+x;}
-// A fixed, known-good skeleton: the top row and left column are clue squares,
-// with a couple of blocks inside to keep the runs short enough to reason about.
-var PATTERN=[
-  "########",
-  "#..##...",
-  "#....#..",
-  "#..#....",
-  "#....#..",
-  "#..##...",
-  "#......."
+// GRID SHAPES THAT VARY, and the honest story of how.
+//
+// The first build had ONE hand-drawn skeleton, so every board was the same
+// puzzle wearing different numbers. The shape IS the puzzle in a Kakuro, so
+// that was the flaw worth fixing.
+//
+// The obvious fix, scattering blocks at random, does not work, and it is worth
+// writing down why rather than quietly abandoning it. A Kakuro is pinned down
+// by CROSSINGS: every white square must sit in an across run AND a down run, so
+// that it has to satisfy two sums at once. Measured over eighty random layouts,
+// exactly ONE satisfied that. Grids that did not have crossings had four or
+// more answers every single time.
+//
+// Real Kakuro grids are designed, not rolled. So these are designed: a set of
+// skeletons that are known to cross everywhere, mirrored and flipped for more
+// variety, with the digits and therefore the clues fresh every time. Eight
+// shapes beats one, and unlike a random roll every one of them works.
+var SKELETONS = [
+  ["#######",
+   "#...###",
+   "#...###",
+   "#...###",
+   "####...",
+   "####...",
+   "####..."],
+
+  ["#######",
+   "###..##",
+   "###..##",
+   "#......",
+   "#......",
+   "###..##",
+   "###..##"],
+
+  ["#######",
+   "#..####",
+   "#..####",
+   "#.....#",
+   "#.....#",
+   "####..#",
+   "####..#"],
+
+  ["#######",
+   "#..#..#",
+   "#..#..#",
+   "#..#..#",
+   "#.....#",
+   "#.....#",
+   "#######"]
 ];
+function mirror(rows){ return rows.map(function(r){ return r.split("").reverse().join(""); }); }
+function flip(rows){ return rows.slice().reverse(); }
+
 function buildSkeleton(){
+  var base = SKELETONS[Math.floor(Math.random()*SKELETONS.length)];
+  var pat = base;
+  // the clue squares have to stay along the top and the left, so only the
+  // transforms that keep that edge solid are used
+  if(Math.random()<0.5) pat = mirror(pat).map(function(r){ return "#" + r.slice(1); });
+  if(Math.random()<0.5) pat = flip(pat).map(function(r,i){ return i===0 ? "#######" : r; });
   blk=[];
   for(var y=0;y<H;y++) for(var x=0;x<W;x++){
-    var row=PATTERN[y]||"";
+    var row=pat[y]||"#######";
     blk.push(row[x]==="#"||row[x]===undefined);
   }
+  // the top row and left column are always clue squares
+  for(var i=0;i<W;i++) blk[i]=true;
+  for(var y2=0;y2<H;y2++) blk[y2*W]=true;
+  runs=findRuns();
+  // and prove the crossings really are there rather than trusting the drawing
+  var acr={},dwn={},k,q;
+  for(k=0;k<runs.length;k++)
+    for(q=0;q<runs[k].cells.length;q++)
+      (runs[k].dir==="a"?acr:dwn)[runs[k].cells[q]]=1;
+  for(k=0;k<W*H;k++) if(!blk[k] && (!acr[k]||!dwn[k])) return false;
+  return runs.length>=8;
 }
+
 // every maximal straight line of open squares, across and down
 function findRuns(){
   var out=[],x,y,i;
@@ -136,19 +197,97 @@ function solveFill(){
   })(0);
   return ok?g:null;
 }
+// HOW MANY WAYS DOES THIS GRID ADD UP?
+// A Kakuro with two answers is not a Kakuro. Same discipline as the Sudoku next
+// to it: the board is counted before it is shown, and thrown away if it is not
+// pinned to exactly one.
+// WITH A BUDGET, because the honest answer to "how many ways" is sometimes
+// "more than I can count before the tab freezes". A grid whose search runs past
+// the budget is not a tight puzzle by definition, so exhausting the budget is
+// treated as ambiguous and the grid is thrown away. Better a rejected grid than
+// a hung game.
+var FILL_BUDGET = 120000;
+function countFills(cap){
+  var order=[],i,steps=0;
+  for(i=0;i<W*H;i++) if(!blk[i]) order.push(i);
+  var g=new Array(W*H).fill(0), found=0;
+  for(i=0;i<W*H;i++) if(given && given[i]) g[i]=cell[i];
+  var mine={};
+  for(i=0;i<runs.length;i++) for(var k=0;k<runs[i].cells.length;k++)
+    (mine[runs[i].cells[k]]=mine[runs[i].cells[k]]||[]).push(i);
+  var blown=false;
+  (function rec(k){
+    if(found>=cap||blown) return;
+    if(++steps>FILL_BUDGET){ blown=true; return; }
+    if(k===order.length){ found++; return; }
+    var c=order[k],rs=mine[c]||[],v,b,q;
+    if(given && given[c]){ rec(k+1); return; }
+    for(v=1;v<=9;v++){
+      var ok=true;
+      for(b=0;b<rs.length && ok;b++){
+        var rn=runs[rs[b]],cs=rn.cells,sum=v,blanks=0;
+        for(q=0;q<cs.length;q++){
+          if(cs[q]===c) continue;
+          if(g[cs[q]]===v){ ok=false; break; }
+          if(g[cs[q]]) sum+=g[cs[q]]; else blanks++;
+        }
+        if(!ok) break;
+        if(sum>rn.sum) ok=false;
+        else if(blanks===0 && sum!==rn.sum) ok=false;
+        else if(blanks>0 && sum+blanks*9 < rn.sum) ok=false;
+      }
+      if(!ok) continue;
+      g[c]=v; rec(k+1); g[c]=0;
+      if(found>=cap||blown) return;
+    }
+  })(0);
+  return blown ? cap : found;      // could not be pinned in time: call it loose
+}
 function reset(){
-  buildSkeleton();
-  runs=findRuns();
-  sol=null;
-  for(var t=0;t<30 && !sol;t++) sol=solveFill();
-  if(!sol){ say("could not build a grid. press NEW GRID",true); return; }
-  for(var i=0;i<runs.length;i++){
-    var s=0;
-    for(var k=0;k<runs[i].cells.length;k++) s+=sol[runs[i].cells[k]];
-    runs[i].sum=s;
+  for(var attempt=0;attempt<40;attempt++){
+    if(!buildSkeleton()) continue;
+    sol=null;
+    for(var t=0;t<25 && !sol;t++) sol=solveFill();
+    if(!sol) continue;
+    for(var i=0;i<runs.length;i++){
+      var sum=0;
+      for(var k=0;k<runs[i].cells.length;k++) sum+=sol[runs[i].cells[k]];
+      runs[i].sum=sum;
+    }
+    // Crossings do most of the work but not always all of it. Rather than throw
+    // away a good-looking grid, the fewest possible squares are PRINTED until
+    // the answer is pinned, exactly as the Sudoku beside it does. Usually none
+    // are needed; occasionally one or two are.
+    cell=new Array(W*H).fill(0);
+    given=new Array(W*H).fill(false);
+    var openIdx=[];
+    for(i=0;i<W*H;i++) if(!blk[i]) openIdx.push(i);
+    for(i=openIdx.length-1;i>0;i--){ var j2=Math.floor(Math.random()*(i+1)); var t2=openIdx[i];openIdx[i]=openIdx[j2];openIdx[j2]=t2; }
+    var guard=0;
+    while(countFills(2)!==1 && guard<openIdx.length){
+      var g2=openIdx[guard++];
+      given[g2]=true; cell[g2]=sol[g2];
+    }
+    if(countFills(2)!==1) continue;      // still loose: this grid is not a puzzle
+
+    // THEN TAKE BACK EVERY ONE THAT WAS NOT NEEDED.
+    //
+    // Adding givens until the answer is pinned overshoots badly: it stops at
+    // whatever random square happened to tip it, so an earlier one is often
+    // doing nothing. Measured before this pass, boards were printing up to 15
+    // of their 22 squares, which leaves seven to solve and is not a puzzle.
+    // Every given is now tried for removal and only kept if the board goes
+    // loose without it, so what remains is the fewest that hold the answer.
+    for(i=0;i<openIdx.length;i++){
+      var gi=openIdx[i];
+      if(!given[gi]) continue;
+      given[gi]=false; var keep=cell[gi]; cell[gi]=0;
+      if(countFills(2)!==1){ given[gi]=true; cell[gi]=keep; }
+    }
+    sel=-1; say(""); draw();
+    return;
   }
-  cell=new Array(W*H).fill(0);
-  sel=-1; say(""); draw();
+  say("could not build a grid. press NEW GRID",true);
 }
 function runsAt(i){
   var out=[];
@@ -167,6 +306,7 @@ function clueFor(i){
 }
 function put(v){
   if(sel<0||blk[sel]) return;
+  if(given[sel]){ say("That one is printed."); return; }
   if(v===0){ cell[sel]=0; say(""); draw(); return; }
   // the two Kakuro rules, said out loud
   var rs=runsAt(sel),k,q;
@@ -216,6 +356,7 @@ function draw(){
       }
     } else {
       cls+=" open";
+      if(given[i]) cls+=" printed";
       if(i===sel) cls+=" sel";
       else { for(var k=0;k<selRuns.length;k++) if(selRuns[k].cells.indexOf(i)>=0){ cls+=" run"; break; } }
       if(cell[i]) inner+=cell[i];

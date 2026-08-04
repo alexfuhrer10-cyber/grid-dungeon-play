@@ -645,7 +645,10 @@ function restartTick(){
   clearInterval(tickT);
   if(running) tickT=setInterval(fallStep, speed());
 }
-function speed(){ return Math.max(320, 1500 - (puzzleNo-1)*160 - Math.floor(streak/4)*60); }
+// 1500ms a row over an eight row well is twelve seconds a piece, which is not
+// a falling block game, it is a slideshow. 750 puts a piece at about six
+// seconds at the start and winds down to under two.
+function speed(){ return Math.max(220, 750 - (puzzleNo-1)*90 - Math.floor(streak/4)*40); }
 function fallStep(){
   if(!running || !cur) return;
   if(canSit(cur,fallRow+1,colSel)) { fallRow++; draw(); return; }

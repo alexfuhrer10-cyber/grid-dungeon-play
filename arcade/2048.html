@@ -37,6 +37,7 @@
     <div class="lab">SCORE</div><div class="big" id="score">0</div>
     <div class="r"><span class="k">BEST TILE</span><span class="v" id="best">2</span></div>
     <div class="r"><span class="k">MOVES</span><span class="v" id="moves">0</span></div>
+    <div class="r"><span class="k">BEST EVER</span><span class="v" id="bestever" style="color:var(--ok)">0</span></div>
   </div>
   <div class="box">
     <div class="lab">CONTROLS</div>
@@ -49,10 +50,14 @@
 // Kept here because it is the one game in the arcade with no grid logic at all:
 // pure spatial greed, which is a different muscle from every KenKen in the app.
 var $=function(s){return document.querySelector(s);};
-var G,score,moves,over;
+var G,score,moves,over,hit2048;
+// a best score that survives the tab is the only reason to play a second run
+var BEST_KEY="kkd-doubling-best";
+function bestEver(){ try{ return +(localStorage.getItem(BEST_KEY)||0); }catch(e){ return 0; } }
+function saveBest(v){ try{ localStorage.setItem(BEST_KEY,String(v)); }catch(e){} }
 function reset(){
   G=[];for(var i=0;i<16;i++)G.push(0);
-  score=0;moves=0;over=false;$("#over").className="";
+  score=0;moves=0;over=false;hit2048=false;$("#over").className="";
   add();add();draw();say("");
 }
 function add(){
@@ -104,7 +109,13 @@ function stuck(){
   }
   return true;
 }
-function end(){ over=true; $("#overT").textContent="STUCK"; $("#over").className="on"; }
+function end(){
+  over=true;
+  if(score>bestEver()) saveBest(score);
+  $("#overT").textContent="STUCK";
+  $("#over").className="on";
+  draw();
+}
 function say(t){ $("#say").textContent=t||""; }
 var COL={2:"#241c40",4:"#2b2350",8:"#3a2a1a",16:"#4a3018",32:"#5a2f22",64:"#6b2b1e",
   128:"#1f4038",256:"#1c4a3c",512:"#1a5546",1024:"#3a2560",2048:"#5a3a10"};
@@ -121,7 +132,8 @@ function draw(){
   $("#score").textContent=score;
   $("#best").textContent=b;
   $("#moves").textContent=moves;
-  if(b>=2048&&!over){ say("2048. You can keep going."); }
+  $("#bestever").textContent=Math.max(bestEver(),score);
+  if(b>=2048&&!hit2048){ hit2048=true; say("2048. Keep going if you want."); }
 }
 window.addEventListener("keydown",function(e){
   var m={ArrowLeft:"left",ArrowRight:"right",ArrowUp:"up",ArrowDown:"down"}[e.key];
