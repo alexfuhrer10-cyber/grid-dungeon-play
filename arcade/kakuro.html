@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE SUMS</title>
-<link rel="stylesheet" href="shell.css?v=310">
-<script src="shell.js?v=310"></script>
+<link rel="stylesheet" href="shell.css?v=317">
+<script src="shell.js?v=317"></script>
 <script>
 // draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
 function tg(rows){
@@ -291,7 +291,13 @@ function countFills(cap){
   })(0);
   return blown ? cap : found;      // could not be pinned in time: call it loose
 }
+// A MINIMAL KAKURO IS ALREADY HARD. The generator strips every given that is
+// not load bearing, so the honest dial runs the other way: EASY hands back a
+// few of the squares it just took, HARD keeps the bare minimum.
+var KKLEVELS=[{n:"EASY",extra:5},{n:"STEADY",extra:2},{n:"HARD",extra:0}];
+var kklevel=1;
 function reset(){
+  if(window.ARCADE&&ARCADE.clock) ARCADE.clock.start();   // every new board is its own run
   for(var attempt=0;attempt<40;attempt++){
     if(!buildSkeleton()) continue;
     sol=null;
@@ -331,6 +337,13 @@ function reset(){
       if(!given[gi]) continue;
       given[gi]=false; var keep=cell[gi]; cell[gi]=0;
       if(countFills(2)!==1){ given[gi]=true; cell[gi]=keep; }
+    }
+    // hand some back, if the player asked for an easier board
+    var spare=[];
+    for(i=0;i<openIdx.length;i++) if(!given[openIdx[i]]) spare.push(openIdx[i]);
+    for(i=0;i<KKLEVELS[kklevel].extra && spare.length;i++){
+      var pick=spare.splice(Math.floor(Math.random()*spare.length),1)[0];
+      given[pick]=true; cell[pick]=sol[pick];
     }
     sel=-1; say(""); draw();
     return;
@@ -443,7 +456,16 @@ window.addEventListener("keydown",function(e){
 $("#again").onclick=reset;
 window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
 reset();
-ARCADE.teachOnce(LESSON);
+ARCADE.start({
+  title: "THE SUMS",
+  level: function(){ return KKLEVELS[kklevel].n; },
+  options: [{ label: "DIFFICULTY", choices: [["0","EASY"],["1","STEADY"],["2","HARD"]],
+    value: function(){ return kklevel; }, onPick: function(v){ kklevel = +v; } }],
+  blurb: "Kakuro. Every run of squares adds to its clue and never repeats a digit.",
+  lesson: LESSON,
+  
+  onStart: function(){ reset(); }
+});
 </script>
 </body>
 </html>

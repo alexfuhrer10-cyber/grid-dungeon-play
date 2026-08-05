@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>NINE BOXES</title>
-<link rel="stylesheet" href="shell.css?v=310">
-<script src="shell.js?v=310"></script>
+<link rel="stylesheet" href="shell.css?v=317">
+<script src="shell.js?v=317"></script>
 <script>
 // draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
 function tg(rows){
@@ -166,6 +166,7 @@ function countSol(g,cap){
   return found;
 }
 function reset(){
+  if(window.ARCADE&&ARCADE.clock) ARCADE.clock.start();   // every new board is its own run
   var g=[],i;
   for(i=0;i<81;i++) g.push(0);
   fill(g,0);
@@ -211,7 +212,7 @@ function put(v){
   var done=true;
   for(var i=0;i<81;i++) if(!cell[i]) done=false;
   if(done){ SFX.win(); say("Solved with "+miss+" mistake"+(miss===1?"":"s")+".");
-    ARCADE.report({solved:true,level:LEVELS[level].n,mistakes:miss}); }
+    ARCADE.report({solved:true,level:LEVELS[level].n,mistakes:miss,hints:0}); }
 }
 function say(t,bad){ var e=$("#say"); e.textContent=t||""; e.className=bad?"no":""; }
 function draw(){
@@ -278,7 +279,15 @@ $("#again").onclick=reset;
 $("#harder").onclick=function(){ level=(level+1)%LEVELS.length; reset(); };
 window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
 level=0; reset();
-ARCADE.teachOnce(LESSON);
+ARCADE.start({
+  title: "NINE BOXES",
+  level: function(){ return LEVELS[level].n; },
+  blurb: "Sudoku. 1 to 9 in every row, every column and every box.",
+  lesson: LESSON,
+  options: [{ label: "DIFFICULTY", choices: [["0","EASY"],["1","STEADY"],["2","HARD"]],
+      value: function(){ return level; }, onPick: function(v){ level = +v; } }],
+  onStart: function(){ reset(); }
+});
 </script>
 </body>
 </html>

@@ -41,10 +41,18 @@
   // mistakes", never "give me fifty Kencoins". Every rate lives in one table in
   // the app, so the economy can be retuned without opening five files, and a
   // tampered frame can only lie about WHAT it did, not about what it is owed.
+  var CURRENT_LEVEL = "";      // set by the front page, read by every report
   window.ARCADE = {
+    setLevel: function (name) { CURRENT_LEVEL = name || ""; },
     report: function (what) {
       try {
-        parent.postMessage({ kkdArcade: true, game: q.get("game") || "", what: what }, "*");
+        var full = {};
+        for (var k in what) full[k] = what[k];
+        // stamped centrally: a cabinet cannot forget to send them, and an
+        // achievement never has to guess what a missing field meant
+        if (full.secs === undefined && window.ARCADE.clock) full.secs = window.ARCADE.clock.secs();
+        if (full.level === undefined && CURRENT_LEVEL) full.level = CURRENT_LEVEL;
+        parent.postMessage({ kkdArcade: true, game: q.get("game") || "", what: full }, "*");
       } catch (e) { /* opened directly, outside the app: nothing to report to */ }
     },
   };
@@ -118,6 +126,73 @@ body{padding-top:56px}
 .seg button.on{background:var(--gold);color:#241c07;border-color:var(--gold)}
 .paper .seg button.on{color:#fff}
 .setNote{font-size:10.5px;line-height:1.55;color:var(--dim2);margin:2px 0 0}
+/* ---- THE CABINET'S OWN FRONT PAGE. What it is, what you can set, START, and
+   HOW TO PLAY as a choice rather than an interruption. ---- */
+#menuWrap{position:fixed;inset:0;background:#080612ee;backdrop-filter:blur(7px);
+  display:flex;align-items:center;justify-content:center;z-index:75;padding:18px}
+.paper #menuWrap{background:#f4efe2f2}
+#mTitle{font-size:15px;font-weight:900;letter-spacing:3px;color:var(--gold);margin-bottom:8px}
+#mBlurb{font-size:12.5px;line-height:1.55;color:var(--dim);margin:0 0 14px}
+.tCard{position:relative}
+#tClose{position:absolute;top:8px;right:8px;width:36px;min-height:36px;padding:0;font-size:17px;
+  border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:8px}
+/* ---- ON A PHONE THE CABINET STACKS. Every one of these is a flex ROW of a
+   board plus a 206px side panel. Under about 560px that panel climbs on top of
+   the board: measured at 375, the board still ran to 350px while the panel
+   started at 304. Nothing scrolled sideways, so it read as a layout that fit
+   when it was actually overlapping. Column below the break, and the panel goes
+   full width under the board where there is room for it. ---- */
+@media (max-width: 560px){
+  body{flex-direction:column; align-items:center; gap:14px; padding:14px 10px 26px}
+  .side{width:100%; max-width:430px}
+  .pad{width:100%; max-width:430px}
+  #arcBar{position:sticky}
+}
+/* ---- THE BOARDS FIT THE PHONE, not the other way round -------------------
+   Every board in here was authored at a fixed pixel size that happens to suit a
+   desktop. On a 375 phone with 10px of padding there are 355 CSS pixels to play
+   with, so a 9-wide Sudoku gets 39 per square and a 44px cell simply hangs off
+   the edge. These sizes are computed from the viewport instead, with a floor so
+   nothing becomes untappable, and the numbers scale with them.
+
+   The pad is the other half: nine number keys in one row are 39px each, which is
+   under the 44px touch minimum, so below the break they wrap to a comfortable
+   grid instead. ---- */
+@media (max-width: 560px){
+  /* 9-wide boards: Sudoku and the Killer */
+  /* the board's PARENT is a plain div with no width of its own, so the grid
+     sized itself off content and ran past the viewport even with 100% set */
+  body > div{width:100%; max-width:100%; min-width:0}
+  #grid{grid-template-columns:repeat(9, minmax(0, 1fr)) !important;
+        width:100%; max-width:min(430px, 100%); margin:0 auto}
+  #grid .c{width:auto !important; height:auto !important; aspect-ratio:1;
+           font-size:clamp(13px, 4.4vw, 20px) !important}
+  #grid .c .sum{font-size:clamp(7px, 2.3vw, 10px)}
+  #grid .c .nt{font-size:clamp(6px, 2vw, 9px)}
+  /* the number pad: never fewer than 44px of finger */
+  /* .pad carries a hardcoded 396px width, which hangs the ninth key off a 375
+     screen. The grid also has to be told a width or it inherits that one. */
+  .pad{display:grid !important; grid-template-columns:repeat(5, 1fr); gap:6px;
+       width:100% !important; max-width:min(430px, 100%); margin:10px auto 0}
+  .pad button{width:auto !important; min-height:46px; flex:none !important; font-size:17px}
+  .pad button.era{grid-column:span 2; font-size:11px}
+  /* the well and the board in Cage Fall, and the 2048 tiles */
+  #well, #board{max-width:100%}
+  #say{min-height:26px}
+}
+@media (max-width: 380px){
+  body{padding:12px 8px 24px}
+  h1{font-size:14px; letter-spacing:4px}
+  .box{padding:9px 11px}
+}
+/* A PHONE IN THE HAND IS SHORT, NOT JUST NARROW. Landscape on a small device
+   leaves ~360px of height, and a fixed 46px bar plus 56px of padding eats a
+   third of it before the board is drawn. */
+@media (max-height: 480px){
+  body{padding-top:50px}
+  #arcBar{height:38px}
+  .abBtn{padding:6px 10px}
+}
 `;
     (document.head || document.documentElement).appendChild(st);
   })();
@@ -190,6 +265,7 @@ body{padding-top:56px}
           '</div>' +
           '<p id="tSay"></p>' +
           '<div id="tBody"></div>' +
+          '<button id="tClose" aria-label="Close">&times;</button>' +
           '<div class="tBtns"><button class="ghost" id="tBack">BACK</button><button id="tNext">NEXT</button></div>' +
         '</div>';
       document.body.appendChild(wrap);
@@ -200,6 +276,11 @@ body{padding-top:56px}
       };
       document.getElementById("tBack").onclick = function () {
         if (teachStep) { teachStep--; SFX.tick(); paintTeach(); }
+      };
+      // OPENED FROM HOW TO PLAY MID-GAME, the only way out was to page all the
+      // way to the end. A lesson you cannot leave is not a lesson.
+      document.getElementById("tClose").onclick = function () {
+        SFX.tick(); wrap.style.display = "none"; if (teachDone) teachDone();
       };
     }
     wrap.style.display = "flex";
@@ -219,6 +300,77 @@ body{padding-top:56px}
     if (seen) { if (onDone) onDone(); return; }
     try { localStorage.setItem(key, "1"); } catch (e) {}
     window.ARCADE.teach(script, onDone);
+  };
+
+
+  // ---- A CLOCK EVERY CABINET SHARES ---------------------------------------
+  // Nothing in here was timed, so "solved it" was the only thing a machine could
+  // ever say about a run. An achievement ladder needs to know how long it took
+  // and how hard the board was, so both ride home on every report.
+  var clockT0 = 0;
+  window.ARCADE.clock = {
+    start: function () { clockT0 = Date.now(); },
+    secs: function () { return clockT0 ? Math.max(0, Math.round((Date.now() - clockT0) / 1000)) : 0; },
+  };
+
+  // ---- THE FRONT OF THE CABINET -------------------------------------------
+  //
+  // A machine should not start teaching the moment you walk up to it. Every
+  // cabinet used to deal a board and throw its lesson over the top on the first
+  // visit, so the first thing a new player did was dismiss something.
+  //
+  // Now each one opens on its own small menu: what it is, whatever it lets you
+  // set, START, and HOW TO PLAY sitting there as a choice for anyone who wants
+  // it. The lesson is never automatic again.
+  window.ARCADE.start = function (cfg) {
+    var wrap = document.createElement("div");
+    wrap.id = "menuWrap";
+    var opts = cfg.options || [];
+    function paint() {
+      var h = '<div class="tCard" style="max-width:380px">' +
+        '<div id="mTitle">' + cfg.title + '</div>' +
+        (cfg.blurb ? '<p id="mBlurb">' + cfg.blurb + '</p>' : "");
+      opts.forEach(function (o, i) {
+        h += '<div class="setRow" style="flex-direction:column;align-items:stretch;gap:6px">' +
+             '<span>' + o.label + '</span><span class="seg" data-opt="' + i + '">';
+        o.choices.forEach(function (ch) {
+          h += '<button data-v="' + ch[0] + '"' + (String(o.value()) === String(ch[0]) ? ' class="on"' : "") + '>' + ch[1] + '</button>';
+        });
+        h += '</span></div>';
+      });
+      h += '<button id="mStart" style="margin-top:12px">START</button>' +
+           '<button class="ghost" id="mTeach" style="margin-top:7px">HOW TO PLAY</button>' +
+           // THE FRONT PAGE SITS ABOVE THE BAR, so without this the first screen
+           // of every machine was a dead end: no START pressed yet, and the only
+           // exit hidden underneath it. Reloading was the way out.
+           '<button class="ghost" id="mBack" style="margin-top:7px">' +
+             (INAPP ? '&larr; BACK TO THE ARCADE' : 'BACK') + '</button>' +
+           '</div>';
+      wrap.innerHTML = h;
+    }
+    paint();
+    document.body.appendChild(wrap);
+    wrap.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      if (b.id === "mStart") {
+        SFX.tick(); wrap.style.display = "none";
+        window.ARCADE.clock.start();
+        if (cfg.level) window.ARCADE.setLevel(cfg.level());
+        if (cfg.onStart) cfg.onStart();
+        return;
+      }
+      if (b.id === "mTeach") { SFX.tick(); window.ARCADE.teach(cfg.lesson); return; }
+      if (b.id === "mBack") { SFX.tick(); if (!ctl("exit")) history.back(); return; }
+      var seg = b.closest("[data-opt]"); if (!seg) return;
+      var o = opts[+seg.dataset.opt];
+      SFX.tick(); o.onPick(b.dataset.v); paint();
+    });
+    // HOW TO PLAY in the side panel opens the same lesson, from anywhere
+    var side = document.getElementById("howto");
+    if (side) side.onclick = function () { window.ARCADE.teach(cfg.lesson); };
+    // and the settings sheet's own HOW TO PLAY keeps working
+    window.ARCADE.__lesson = cfg.lesson;
+    return { reopen: function () { wrap.style.display = "flex"; paint(); } };
   };
 
   // ---- THE NOISE -----------------------------------------------------------
@@ -346,7 +498,9 @@ body{padding-top:56px}
       if (e.key !== "Escape") return;
       if (sheet.style.display === "flex") { sheet.style.display = "none"; return; }
       var t = document.getElementById("teachWrap");
-      if (t && t.style.display === "flex") return;   // the lesson has its own buttons
+      if (t && t.style.display === "flex") { t.style.display = "none"; return; }
+      var m = document.getElementById("menuWrap");
+      if (m && m.style.display !== "none") { if (!ctl("exit")) history.back(); return; }
       if (INAPP) ctl("exit");
     });
   }

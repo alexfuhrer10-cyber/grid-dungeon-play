@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE DOUBLING</title>
-<link rel="stylesheet" href="shell.css?v=310">
-<script src="shell.js?v=310"></script>
+<link rel="stylesheet" href="shell.css?v=317">
+<script src="shell.js?v=317"></script>
 <script>
 // draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
 function tg(rows){
@@ -44,7 +44,7 @@ var LESSON=[
   #board{display:grid;grid-template-columns:repeat(4,76px);gap:8px;
     background:#120c28;border:3px solid var(--info);border-radius:8px;padding:8px;
     box-shadow:0 0 34px #22e0ff22}
-  .t{width:76px;height:76px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  .t{width:var(--tile,76px);height:var(--tile,76px);border-radius:6px;display:flex;align-items:center;justify-content:center;
     font-weight:900;font-size:27px;background:#1a1236;color:var(--ink);
     transition:transform .09s}
   .t.e{background:#170f30}
@@ -93,18 +93,25 @@ var LESSON=[
 // pure spatial greed, which is a different muscle from every KenKen in the app.
 var $=function(s){return document.querySelector(s);};
 var G,score,moves,over,hit2048;
+// SIZE IS THE DIFFICULTY. 4x4 is the real game; 5x5 gives room to recover from
+// a bad slide, 3x3 punishes one immediately.
+var DLEVELS=[{n:"ROOMY",N:5},{n:"CLASSIC",N:4},{n:"TIGHT",N:3}];
+var dlevel=1;
+var N=4;
 // a best score that survives the tab is the only reason to play a second run
 var BEST_KEY="kkd-doubling-best";
 function bestEver(){ try{ return +(localStorage.getItem(BEST_KEY)||0); }catch(e){ return 0; } }
 function saveBest(v){ try{ localStorage.setItem(BEST_KEY,String(v)); }catch(e){} }
 function reset(){
-  G=[];for(var i=0;i<16;i++)G.push(0);
+  if(window.ARCADE&&ARCADE.clock) ARCADE.clock.start();   // every new board is its own run
+  N=DLEVELS[dlevel].N;
+  G=[];for(var i=0;i<N*N;i++)G.push(0);
   score=0;moves=0;over=false;hit2048=false;$("#over").className="";
   add();add();draw();say("");
 }
 function add(){
   var free=[],i;
-  for(i=0;i<16;i++) if(!G[i]) free.push(i);
+  for(i=0;i<N*N;i++) if(!G[i]) free.push(i);
   if(!free.length) return;
   G[free[Math.floor(Math.random()*free.length)]] = Math.random()<0.9?2:4;
 }
@@ -115,17 +122,17 @@ function slide(row){
     if(a[i]===a[i+1]){ out.push(a[i]*2); gained+=a[i]*2; i+=2; }
     else { out.push(a[i]); i++; }
   }
-  while(out.length<4) out.push(0);
+  while(out.length<N) out.push(0);
   return {row:out,gained:gained};
 }
-function rows(){ var r=[],y;for(y=0;y<4;y++) r.push(G.slice(y*4,y*4+4)); return r; }
-function setRows(r){ G=[];for(var y=0;y<4;y++) for(var x=0;x<4;x++) G.push(r[y][x]); }
-function tpose(r){ var o=[],y,x;for(y=0;y<4;y++){o.push([]);for(x=0;x<4;x++)o[y].push(r[x][y]);} return o; }
+function rows(){ var r=[],y;for(y=0;y<N;y++) r.push(G.slice(y*N,y*N+N)); return r; }
+function setRows(r){ G=[];for(var y=0;y<N;y++) for(var x=0;x<N;x++) G.push(r[y][x]); }
+function tpose(r){ var o=[],y,x;for(y=0;y<N;y++){o.push([]);for(x=0;x<N;x++)o[y].push(r[x][y]);} return o; }
 function move(dir){
   if(over) return;
   var r=rows(),y,gained=0,before=G.join(",");
   if(dir==="up"||dir==="down") r=tpose(r);
-  for(y=0;y<4;y++){
+  for(y=0;y<N;y++){
     var line=r[y].slice();
     var rev=(dir==="right"||dir==="down");
     if(rev) line.reverse();
@@ -144,19 +151,19 @@ function move(dir){
 }
 function stuck(){
   var i,x,y;
-  for(i=0;i<16;i++) if(!G[i]) return false;
-  for(y=0;y<4;y++) for(x=0;x<4;x++){
-    var v=G[y*4+x];
-    if(x<3&&G[y*4+x+1]===v) return false;
-    if(y<3&&G[(y+1)*4+x]===v) return false;
+  for(i=0;i<N*N;i++) if(!G[i]) return false;
+  for(y=0;y<N;y++) for(x=0;x<N;x++){
+    var v=G[y*N+x];
+    if(x<N-1&&G[y*N+x+1]===v) return false;
+    if(y<N-1&&G[(y+1)*N+x]===v) return false;
   }
   return true;
 }
 function end(){
   over=true;
   SFX.no();
-  var top=0; for(var z=0;z<16;z++) if(G[z]>top) top=G[z];
-  ARCADE.report({gameOver:true,score:score,tile:top});
+  var top=0; for(var z=0;z<N*N;z++) if(G[z]>top) top=G[z];
+  ARCADE.report({gameOver:true,score:score,tile:top,moves:moves,n:N});
   if(score>bestEver()) saveBest(score);
   $("#overT").textContent="STUCK";
   $("#over").className="on";
@@ -173,14 +180,15 @@ var COL = ONPAPER
      128:"#1f4038",256:"#1c4a3c",512:"#1a5546",1024:"#3a2560",2048:"#5a3a10"};
 function draw(){
   var h="",i;
-  for(i=0;i<16;i++){
+  for(i=0;i<N*N;i++){
     var v=G[i];
-    h+='<div class="t'+(v?"":" e")+'" style="'+(v?"background:"+(COL[v]||"#6a4410")+";":"")
+    h+='<div class="t'+(v?"":" e")+'" style="--tile:'+(N>4?62:N<4?92:76)+'px;'+(v?"background:"+(COL[v]||"#6a4410")+";":"")
       +(v>=1024?"font-size:20px;":v>=128?"font-size:23px;":"")
       +(v>=8&&!ONPAPER?"color:var(--gold);":"")+(ONPAPER?"color:#2A2418;":"")+'">'+(v||"")+'</div>';
   }
+  $("#board").style.gridTemplateColumns="repeat("+N+", "+(N>4?62:N<4?92:76)+"px)";
   $("#board").innerHTML=h;
-  var b=0;for(i=0;i<16;i++) if(G[i]>b) b=G[i];
+  var b=0;for(i=0;i<N*N;i++) if(G[i]>b) b=G[i];
   $("#score").textContent=score;
   $("#best").textContent=b;
   $("#moves").textContent=moves;
@@ -200,7 +208,16 @@ document.addEventListener("touchend",function(e){
 },{passive:true});
 $("#again").onclick=reset; $("#retry").onclick=reset;
 reset();
-ARCADE.teachOnce(LESSON);
+ARCADE.start({
+  title: "THE DOUBLING",
+  level: function(){ return DLEVELS[dlevel].n; },
+  options: [{ label: "BOARD", choices: [["0","5×5"],["1","4×4"],["2","3×3"]],
+    value: function(){ return dlevel; }, onPick: function(v){ dlevel = +v; } }],
+  blurb: "Slide the board. Equal numbers merge. Get to 2048.",
+  lesson: LESSON,
+  
+  onStart: function(){ reset(); }
+});
 </script>
 </body>
 </html>

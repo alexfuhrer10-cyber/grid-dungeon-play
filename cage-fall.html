@@ -148,7 +148,7 @@
   .paper .dc.jk{background:#b0206020}
   .paper #teach{background:#f4efe2e8}
 </style>
-<script src="arcade/shell.js?v=310"></script>
+<script src="arcade/shell.js?v=317"></script>
 </head>
 <body>
 
@@ -686,7 +686,12 @@ function next(){
   draw();
 }
 
+// The board IS the difficulty here: a 4x4 forgives a bad drop, a 6x6 has more
+// columns to bury and more squares to brand before you notice.
+var CFLEVELS=[{n:"4×4",N:4},{n:"5×5",N:5},{n:"6×6",N:6}];
+var cflevel=0;
 function start(n){
+  if(window.ARCADE&&ARCADE.clock) ARCADE.clock.start();
   if(!newPuzzle(n)){ say("could not build a puzzle. press NEW GAME",true); return; }
   grid=[]; scar=[]; junk=[];
   for(var r=0;r<N;r++){ var row=[],sr=[]; for(var c=0;c<N;c++){ row.push(0); sr.push(false); } grid.push(row); scar.push(sr); }
@@ -970,12 +975,24 @@ var LESSON=[
  {who:"lulu", say:"Two buttons that will save you. <kbd>C</kbd> <b>holds</b> a number you cannot use yet and gives it back when you want it. <kbd>D</kbd> bins it and sends it round again. Both cost you almost nothing. Junk costs you everything. Use them.",
   show:""}
 ];
-$("#again").onclick=function(){ score=0; puzzleNo=1; start(4); };
+$("#again").onclick=function(){ score=0; puzzleNo=1; start(CFLEVELS[cflevel].N); };
 $("#blindBtn").onclick=function(){ blind=!blind; draw(); };
 window.addEventListener("error",function(e){ say("BROKE: "+e.message,true); });
 
 score=0; puzzleNo=1; blind=false; start(4); running=false; clearInterval(tickT);
-ARCADE.teachOnce(LESSON, function(){ score=0; puzzleNo=1; start(4); });
+ARCADE.start({
+  title: "CAGE FALL",
+  level: function(){ return CFLEVELS[cflevel].n; },
+  blurb: "A real KenKen at the bottom. The numbers fall into it, and a wrong one brands the square.",
+  lesson: LESSON,
+  options: [
+    { label: "BOARD", choices: [["0","4×4"],["1","5×5"],["2","6×6"]],
+      value: function(){ return cflevel; }, onPick: function(v){ cflevel = +v; } },
+    { label: "SAFE LANDINGS", choices: [["1","SHOWN"],["0","HIDDEN"]],
+      value: function(){ return blind ? "0" : "1"; },
+      onPick: function(v){ blind = (v === "0"); } }],
+  onStart: function(){ score=0; puzzleNo=1; start(CFLEVELS[cflevel].N); }
+});
 </script>
 </body>
 </html>
