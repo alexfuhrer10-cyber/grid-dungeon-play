@@ -9,93 +9,66 @@
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin: 0; background: #0b0e1a; color: #dfe6ff; font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
-  h1 { font-size: 16px; letter-spacing: 3px; color: #7df3ff; margin: 0 0 4px; }
-  .sub { color: #7c86ad; font-size: 12px; margin: 0 0 20px; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 20px 14px 80px; }
+  h1 { font-size: 16px; letter-spacing: 3px; color: #7df3ff; margin: 0 0 2px; }
+  .sub { color: #7c86ad; font-size: 12px; margin: 0 0 14px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tabs button { margin: 0; padding: 8px 13px; border-radius: 999px; background: #121732; border: 1px solid #2a3260; color: #7c86ad; font-size: 11px; letter-spacing: 1.5px; font-weight: 700; cursor: pointer; }
+  .tabs button.on { color: #7df3ff; border-color: #7df3ff88; background: #16324a; }
   .card { background: #121732; border: 1px solid #2a3260; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
   .card h2 { font-size: 12px; letter-spacing: 2px; color: #fbbf24; margin: 0 0 10px; }
   label { display: block; font-size: 11px; letter-spacing: 1px; color: #7c86ad; margin: 8px 0 3px; }
   input, textarea, select { width: 100%; background: #0b0e1a; border: 1px solid #2a3260; border-radius: 7px; color: #dfe6ff; padding: 9px 10px; font: inherit; }
-  textarea { min-height: 64px; resize: vertical; }
+  textarea { min-height: 64px; resize: vertical; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
   button { background: #16324a; border: 1px solid #7df3ff88; color: #7df3ff; border-radius: 7px; padding: 9px 14px; font: inherit; font-weight: 700; letter-spacing: 1px; cursor: pointer; margin-top: 10px; }
   button.warn { border-color: #fbbf2488; color: #fbbf24; background: #33270e; }
-  .row { display: flex; gap: 8px; align-items: center; }
+  button.bad { border-color: #ff7a9088; color: #ff7a90; background: #33131a; }
+  button.mini { padding: 4px 10px; font-size: 11px; margin: 4px 6px 0 0; }
+  .row { display: flex; gap: 8px; align-items: flex-end; }
   .row > * { flex: 1; }
-  .msg { font-size: 12px; color: #8ef3b0; margin-top: 8px; white-space: pre-wrap; }
-  .err { color: #ff7a90; }
-  .item { border-top: 1px solid #2a326055; padding: 8px 0; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .stat { background: #0b0e1a; border: 1px solid #2a3260; border-radius: 8px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 22px; color: #7df3ff; }
+  .stat span { font-size: 10px; letter-spacing: 1.5px; color: #7c86ad; }
+  .item { border-top: 1px solid #2a326055; padding: 9px 0; font-size: 13px; }
   .item small { color: #7c86ad; display: block; }
   .pill { display: inline-block; font-size: 10px; letter-spacing: 1px; border: 1px solid #2a3260; border-radius: 999px; padding: 1px 8px; color: #7c86ad; margin-left: 6px; }
+  .pill.ok { color: #8ef3b0; border-color: #8ef3b055; }
+  .pill.bad { color: #ff7a90; border-color: #ff7a9055; }
+  .msg { font-size: 12px; color: #8ef3b0; margin-top: 8px; white-space: pre-wrap; }
+  .err { color: #ff7a90; }
+  code { background: #0b0e1a; border: 1px solid #2a3260; border-radius: 5px; padding: 1px 6px; font-size: 12px; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #16324a; border: 1px solid #7df3ff88; color: #dfe6ff; border-radius: 999px; padding: 10px 18px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 90vw; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>KENKEN MASTER CONTROL</h1>
-  <p class="sub">Internal team only. Every action here is checked server-side (RLS) — this page holds no secrets and grants nothing by itself.</p>
+  <p class="sub">Internal team only. Every action is checked server-side (RLS); this page holds no secrets and grants nothing by itself.</p>
 
-  <div class="card" id="who">
-    <h2>WHO AM I</h2>
-    <div id="whoBody">Checking the session from the game…</div>
-  </div>
+  <div class="card" id="who"><h2>WHO AM I</h2><div id="whoBody">Checking the session from the game…</div></div>
 
   <div id="tools" style="display:none">
-    <div class="card">
-      <h2>POST NEWS — appears in-game instantly</h2>
-      <label>Title</label><input id="nTitle" maxlength="120" placeholder="THE HEADLINE" />
-      <label>Body</label><textarea id="nBody" placeholder="A sentence or two."></textarea>
-      <label>Link (optional)</label><input id="nUrl" placeholder="https://…" />
-      <div class="row">
-        <div><label>Tag</label><select id="nTag"><option>news</option><option>update</option><option>event</option><option>people</option></select></div>
-        <div><label>Pinned</label><select id="nPin"><option value="false">no</option><option value="true">yes</option></select></div>
-      </div>
-      <button onclick="postNews()">POST IT</button>
-      <div class="msg" id="nMsg"></div>
-      <div id="newsList"></div>
-    </div>
-
-    <div class="card">
-      <h2>ISSUE A GRANT — comps &amp; kenken.com backlog</h2>
-      <label>Email (one, exact)</label><input id="gEmail" placeholder="player@example.com" />
-      <div class="row">
-        <div><label>Kind</label><select id="gKind"><option>premium</option><option>coins</option><option>skin</option><option>note</option></select></div>
-        <div><label>Value (sku, or coin amount)</label><input id="gValue" placeholder="kenken_premium" /></div>
-      </div>
-      <label>Note (internal)</label><input id="gNote" placeholder="why" />
-      <button onclick="addGrant()">GRANT IT</button>
-      <div class="msg" id="gMsg"></div>
-    </div>
-
-    <div class="card">
-      <h2>LOOK SOMEBODY UP</h2>
-      <label>Handle or friend code</label>
-      <div class="row"><input id="qWho" placeholder="RILEY or AB12CD" /><button style="margin-top:0" onclick="lookup()">FIND</button></div>
-      <div class="msg" id="qMsg"></div>
-      <div id="qOut"></div>
-    </div>
+    <div class="tabs" id="tabs"></div>
+    <div id="paneHost"></div>
   </div>
 </div>
+<div id="toast"></div>
 
 <script>
 const URL_BASE = "https://kwxloloxyovduapgormo.supabase.co";
 const ANON = "sb_publishable_gWiColAMblYHGAcQJOx-Aw_xOltTJnq";
+const TABS = [["overview","OVERVIEW"],["news","NEWS"],["grants","GRANTS"],["players","PLAYERS"],["saves","SAVES"],["moderation","MODERATION"],["team","TEAM"]];
+let TAB = "overview";
 
-// The session comes from the GAME on the same origin: open the game, make
-// sure you are signed in (THE ACCOUNT), then open this page.
-function session() {
-  try { return JSON.parse(localStorage.getItem("gd-auth") || "null"); } catch (e) { return null; }
-}
-// Tokens expire in about an hour; the game refreshes its own, and so must we.
+function session() { try { return JSON.parse(localStorage.getItem("gd-auth") || "null"); } catch (e) { return null; } }
 async function freshSession() {
   const s = session();
   if (!s) return null;
   if (s.access_token && s.expires_at && s.expires_at > Date.now() / 1000 + 60) return s;
   if (!s.refresh_token) return s;
   try {
-    const r = await fetch(URL_BASE + "/auth/v1/token?grant_type=refresh_token", {
-      method: "POST",
-      headers: { apikey: ANON, "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: s.refresh_token }),
-    });
+    const r = await fetch(URL_BASE + "/auth/v1/token?grant_type=refresh_token", { method: "POST", headers: { apikey: ANON, "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: s.refresh_token }) });
     if (!r.ok) return s;
     const j = await r.json();
     const nx = { access_token: j.access_token, refresh_token: j.refresh_token, user_id: (j.user && j.user.id) || s.user_id, expires_at: Math.floor(Date.now() / 1000) + (j.expires_in || 3600) };
@@ -103,92 +76,283 @@ async function freshSession() {
     return nx;
   } catch (e) { return s; }
 }
-function H() {
-  const s = session();
-  return { apikey: ANON, Authorization: "Bearer " + ((s && s.access_token) || ANON), "Content-Type": "application/json" };
-}
+function H(extra) { const s = session(); return Object.assign({ apikey: ANON, Authorization: "Bearer " + ((s && s.access_token) || ANON), "Content-Type": "application/json" }, extra || {}); }
 async function api(path, opts) {
-  const r = await fetch(URL_BASE + path, Object.assign({ headers: H() }, opts || {}));
+  await freshSession();
+  const r = await fetch(URL_BASE + path, Object.assign({ headers: H((opts || {}).headers) }, opts || {}));
   const txt = await r.text();
   let data = null; try { data = JSON.parse(txt); } catch (e) {}
   return { ok: r.ok, status: r.status, data, txt };
 }
 function esc(x) { const d = document.createElement("div"); d.textContent = String(x == null ? "" : x); return d.innerHTML; }
+function toast(msg, bad) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.borderColor = bad ? "#ff7a9088" : "#7df3ff88"; t.style.opacity = 1;
+  clearTimeout(t._h); t._h = setTimeout(() => { t.style.opacity = 0; }, 2600);
+}
+function needsV2(status) { return status === 401 || status === 403 || status === 404; }
+const V2NOTE = '<div class="msg err">This power needs supabase/master-control-2.sql — one more paste in the SQL editor unlocks it.</div>';
 
+// ---------- BOOT ----------
 async function boot() {
   const s = await freshSession();
   const who = document.getElementById("whoBody");
-  if (!s || !s.access_token) {
-    who.innerHTML = '<span class="err">No game session found. Open the game on this device first, then reload this page.</span>';
-    return;
-  }
-  // The server says whether this account is on the team; nothing here decides.
+  if (!s || !s.access_token) { who.innerHTML = '<span class="err">No game session found. Open the game on this device first, then reload this page.</span>'; return; }
   const probe = await api("/rest/v1/rpc/gd_is_admin", { method: "POST", body: "{}" });
-  const insert = "insert into public.gd_admins (user_id, label) values ('" + (s.user_id || "?") + "', 'team');";
   if (probe.ok && probe.data === true) {
-    who.innerHTML = "Signed in as team. <span class='pill'>ADMIN</span>";
+    who.innerHTML = "Signed in as team. <span class='pill ok'>ADMIN</span> <span class='pill'>" + esc((s.user_id || "").slice(0, 8)) + "…</span>";
     document.getElementById("tools").style.display = "";
-    listNews();
+    renderTabs(); show(TAB);
   } else if (probe.ok) {
+    const insert = "insert into public.gd_admins (user_id, label) values ('" + (s.user_id || "?") + "', 'team');";
     who.innerHTML = '<span class="err">This browser\'s account is not on the team yet.</span>' +
       '<div style="margin-top:8px;font-size:12px;color:#7c86ad">This account id: <code>' + esc(s.user_id || "?") + "</code></div>" +
-      '<button onclick="navigator.clipboard.writeText(\'' + insert + '\').then(()=>{this.textContent=\'COPIED — paste it in the SQL editor and Run\'})">COPY THE ADD-ME LINE</button>' +
-      '<div style="margin-top:6px;font-size:12px;color:#7c86ad">Then: Supabase → SQL Editor → paste → Run → reload this page.</div>';
+      "<button onclick=\"navigator.clipboard.writeText('" + insert + "').then(()=>toast('Copied. Paste it in the SQL editor and Run.'))\">COPY THE ADD-ME LINE</button>";
   } else {
-    who.innerHTML = '<span class="err">Could not check (' + probe.status + "). If this keeps happening, reload the game once (it renews the session), then reload this page.</span>";
+    who.innerHTML = '<span class="err">Could not check (' + probe.status + "). Reload the game once, then reload this page.</span>";
   }
 }
-
-async function listNews() {
-  const r = await api("/rest/v1/gd_news?select=id,title,tag,pinned,published&order=created_at.desc&limit=10");
-  if (!r.ok) return;
-  document.getElementById("newsList").innerHTML = (r.data || []).map((n) =>
-    '<div class="item">' + esc(n.title) + '<span class="pill">' + esc(n.tag) + (n.pinned ? " · pinned" : "") + (n.published ? "" : " · HIDDEN") + "</span>" +
-    ' <button class="warn" style="padding:3px 10px;margin:4px 0 0" onclick="toggleNews(' + n.id + "," + !n.published + ')">' + (n.published ? "HIDE" : "SHOW") + "</button></div>"
-  ).join("");
+function renderTabs() {
+  document.getElementById("tabs").innerHTML = TABS.map(([k, label]) =>
+    '<button id="tab-' + k + '" class="' + (TAB === k ? "on" : "") + '" onclick="show(\'' + k + '\')">' + label + "</button>").join("");
 }
-async function toggleNews(id, pub) {
-  await api("/rest/v1/gd_news?id=eq." + id, { method: "PATCH", body: JSON.stringify({ published: pub }) });
+function show(k) { TAB = k; renderTabs(); document.getElementById("paneHost").innerHTML = ""; PANES[k](); }
+
+// ---------- OVERVIEW ----------
+async function paneOverview() {
+  const host = document.getElementById("paneHost");
+  host.innerHTML = '<div class="card"><h2>THE FLOOR, RIGHT NOW</h2><div class="grid" id="stats">Loading…</div></div>' +
+    '<div class="card"><h2>LATEST ACTIVITY</h2><div id="activity">Loading…</div></div>';
+  const today = new Date().toISOString().slice(0, 10);
+  // counts via content-range
+  async function countOf(q) {
+    const r = await fetch(URL_BASE + "/rest/v1/" + q + "&limit=1", { headers: H({ Prefer: "count=exact" }) });
+    const range = r.headers.get("content-range") || "";
+    const n = range.split("/")[1];
+    return r.ok ? (n === "*" ? "?" : n) : "—";
+  }
+  const [players, cardsToday, cardsAll, answers, news, grants] = await Promise.all([
+    countOf("gd_profiles?select=id"),
+    countOf("gd_cards?select=id&day=eq." + today),
+    countOf("gd_cards?select=id"),
+    countOf("gd_answers?select=id"),
+    countOf("gd_news?select=id"),
+    countOf("gd_grants?select=id&claimed_at=is.null"),
+  ]);
+  document.getElementById("stats").innerHTML =
+    stat(players, "PLAYERS (PROFILES)") + stat(cardsToday, "CARDS TODAY") + stat(cardsAll, "CARDS EVER") +
+    stat(answers, "CHALLENGES ANSWERED") + stat(news, "NEWS POSTS") + stat(grants, "GRANTS WAITING");
+  const acts = await api("/rest/v1/gd_cards?select=handle,n,secs,day&order=created_at.desc&limit=8");
+  const ans = await api("/rest/v1/gd_answers?select=challenger,secs,won,created_at&order=created_at.desc&limit=8");
+  let html = "";
+  for (const c of (acts.data || [])) html += '<div class="item">' + esc(c.handle) + " published a " + c.n + "×" + c.n + " card — " + c.secs + "s<small>" + esc(c.day) + "</small></div>";
+  for (const a of (ans.data || [])) html += '<div class="item">' + esc(a.challenger) + (a.won ? " took" : " lost") + " a challenge — " + a.secs + "s<small>" + esc((a.created_at || "").slice(0, 16).replace("T", " ")) + "</small></div>";
+  document.getElementById("activity").innerHTML = html || '<div class="item">Quiet so far.</div>';
+  function stat(v, l) { return '<div class="stat"><b>' + esc(v) + "</b><span>" + l + "</span></div>"; }
+}
+
+// ---------- NEWS ----------
+async function paneNews() {
+  const host = document.getElementById("paneHost");
+  host.innerHTML = '<div class="card"><h2>POST NEWS — live in-game the moment you post</h2>' +
+    '<label>Title</label><input id="nTitle" maxlength="120" />' +
+    '<label>Body</label><textarea id="nBody"></textarea>' +
+    '<label>Link (optional)</label><input id="nUrl" placeholder="https://…" />' +
+    '<div class="row"><div><label>Tag</label><select id="nTag"><option>news</option><option>update</option><option>event</option><option>people</option></select></div>' +
+    '<div><label>Pinned</label><select id="nPin"><option value="false">no</option><option value="true">yes</option></select></div></div>' +
+    '<button onclick="postNews()">POST IT</button></div>' +
+    '<div class="card"><h2>EVERY POST</h2><div id="newsList">Loading…</div></div>';
+  listNews();
+}
+async function listNews() {
+  const r = await api("/rest/v1/gd_news?select=id,title,body,url,tag,pinned,published&order=pinned.desc,created_at.desc&limit=30");
+  const el = document.getElementById("newsList");
+  if (!r.ok) { el.innerHTML = '<div class="msg err">Could not load (' + r.status + ").</div>"; return; }
+  el.innerHTML = (r.data || []).map((n) =>
+    '<div class="item"><b>' + esc(n.title) + '</b><span class="pill">' + esc(n.tag) + "</span>" +
+    (n.pinned ? '<span class="pill ok">pinned</span>' : "") + (n.published ? "" : '<span class="pill bad">hidden</span>') +
+    "<small>" + esc((n.body || "").slice(0, 120)) + "</small>" +
+    '<button class="mini" onclick="patchNews(' + n.id + ',{pinned:' + !n.pinned + '})">' + (n.pinned ? "UNPIN" : "PIN") + "</button>" +
+    '<button class="mini warn" onclick="patchNews(' + n.id + ',{published:' + !n.published + '})">' + (n.published ? "HIDE" : "SHOW") + "</button>" +
+    "</div>").join("") || '<div class="item">Nothing yet.</div>';
+}
+async function patchNews(id, body) {
+  const r = await api("/rest/v1/gd_news?id=eq." + id, { method: "PATCH", body: JSON.stringify(body) });
+  toast(r.ok ? "Updated." : "Failed (" + r.status + ")", !r.ok);
   listNews();
 }
 async function postNews() {
-  const body = {
-    title: document.getElementById("nTitle").value.trim(),
-    body: document.getElementById("nBody").value.trim(),
-    url: document.getElementById("nUrl").value.trim() || null,
-    tag: document.getElementById("nTag").value,
-    pinned: document.getElementById("nPin").value === "true",
-  };
-  const r = await api("/rest/v1/gd_news", { method: "POST", body: JSON.stringify(body) });
-  document.getElementById("nMsg").textContent = r.ok ? "Posted. It is live in the game now." : "Failed (" + r.status + "): " + r.txt.slice(0, 140);
-  document.getElementById("nMsg").className = "msg" + (r.ok ? "" : " err");
-  if (r.ok) { document.getElementById("nTitle").value = ""; document.getElementById("nBody").value = ""; document.getElementById("nUrl").value = ""; listNews(); }
+  const b = { title: nTitle.value.trim(), body: nBody.value.trim(), url: nUrl.value.trim() || null, tag: nTag.value, pinned: nPin.value === "true" };
+  if (b.title.length < 3) { toast("A title needs at least 3 characters.", true); return; }
+  const r = await api("/rest/v1/gd_news", { method: "POST", body: JSON.stringify(b) });
+  toast(r.ok ? "Posted — it is live in the game now." : "Failed (" + r.status + ")", !r.ok);
+  if (r.ok) { nTitle.value = ""; nBody.value = ""; nUrl.value = ""; listNews(); }
+}
+
+// ---------- GRANTS ----------
+async function paneGrants() {
+  const host = document.getElementById("paneHost");
+  host.innerHTML = '<div class="card"><h2>ISSUE ONE GRANT</h2>' +
+    '<div class="row"><div><label>Email</label><input id="gEmail" /></div>' +
+    '<div><label>Kind</label><select id="gKind"><option>premium</option><option>coins</option><option>skin</option><option>note</option></select></div>' +
+    '<div><label>Value (sku / amount)</label><input id="gValue" placeholder="kenken_premium" /></div></div>' +
+    '<label>Note (internal)</label><input id="gNote" />' +
+    '<button onclick="addGrant()">GRANT IT</button></div>' +
+    '<div class="card"><h2>BULK IMPORT — the kenken.com backlog</h2>' +
+    '<label>One email per line; every one gets a premium grant</label><textarea id="bulkEmails" placeholder="a@x.com&#10;b@y.com"></textarea>' +
+    '<button class="warn" onclick="bulkGrants()">IMPORT ALL AS PREMIUM</button><div class="msg" id="bulkMsg"></div></div>' +
+    '<div class="card"><h2>EVERY GRANT</h2><div id="grantList">Loading…</div></div>';
+  listGrants();
+}
+async function listGrants() {
+  const r = await api("/rest/v1/gd_grants?select=id,email,kind,value,claimed_at&order=created_at.desc&limit=40");
+  const el = document.getElementById("grantList");
+  if (!r.ok) { el.innerHTML = V2NOTE; return; }
+  el.innerHTML = (r.data || []).map((g) =>
+    '<div class="item">' + esc(g.email) + ' <span class="pill">' + esc(g.kind) + (g.value ? " · " + esc(g.value) : "") + "</span>" +
+    (g.claimed_at ? '<span class="pill ok">claimed</span>' : '<span class="pill">waiting</span>' +
+      '<button class="mini bad" onclick="if(confirm(\'Revoke this unclaimed grant?\'))delGrant(' + g.id + ')">REVOKE</button>') +
+    "</div>").join("") || '<div class="item">No grants yet.</div>';
+}
+async function delGrant(id) {
+  const r = await api("/rest/v1/gd_grants?id=eq." + id + "&claimed_at=is.null", { method: "DELETE" });
+  toast(r.ok ? "Revoked." : (needsV2(r.status) ? "Needs master-control-2.sql." : "Failed (" + r.status + ")"), !r.ok);
+  listGrants();
 }
 async function addGrant() {
-  const body = {
-    email: document.getElementById("gEmail").value.trim(),
-    kind: document.getElementById("gKind").value,
-    value: document.getElementById("gValue").value.trim(),
-    note: document.getElementById("gNote").value.trim() || null,
-  };
-  const r = await api("/rest/v1/gd_grants", { method: "POST", body: JSON.stringify(body) });
-  document.getElementById("gMsg").textContent = r.ok ? "Granted. It claims itself when that email is attached in-game." : "Failed (" + r.status + "): " + r.txt.slice(0, 140);
-  document.getElementById("gMsg").className = "msg" + (r.ok ? "" : " err");
+  const b = { email: gEmail.value.trim(), kind: gKind.value, value: gValue.value.trim(), note: gNote.value.trim() || null };
+  if (!/@/.test(b.email)) { toast("That is not an email.", true); return; }
+  const r = await api("/rest/v1/gd_grants", { method: "POST", body: JSON.stringify(b) });
+  toast(r.ok ? "Granted. It claims itself when that email signs in." : "Failed (" + r.status + ")", !r.ok);
+  if (r.ok) { gEmail.value = ""; listGrants(); }
+}
+async function bulkGrants() {
+  const emails = bulkEmails.value.split(/\s+/).map((x) => x.trim()).filter((x) => /@/.test(x));
+  if (!emails.length) { toast("No emails found.", true); return; }
+  const rows = emails.map((email) => ({ email, kind: "premium", value: "kenken_premium", note: "kenken.com backlog" }));
+  const r = await api("/rest/v1/gd_grants", { method: "POST", body: JSON.stringify(rows) });
+  document.getElementById("bulkMsg").textContent = r.ok ? emails.length + " grants issued." : "Failed (" + r.status + "): " + r.txt.slice(0, 120);
+  if (r.ok) { bulkEmails.value = ""; listGrants(); }
+}
+
+// ---------- PLAYERS ----------
+async function panePlayers() {
+  const host = document.getElementById("paneHost");
+  host.innerHTML = '<div class="card"><h2>FIND A PLAYER</h2>' +
+    '<div class="row"><input id="qWho" placeholder="handle or friend code" onkeydown="if(event.key===\'Enter\')lookup()" /><button style="margin-top:0" onclick="lookup()">FIND</button></div>' +
+    '<div class="msg" id="qMsg"></div><div id="qOut"></div></div>';
 }
 async function lookup() {
-  const q = document.getElementById("qWho").value.trim();
-  const out = document.getElementById("qOut");
-  const msg = document.getElementById("qMsg");
-  out.innerHTML = ""; msg.textContent = "Looking…";
+  const q = qWho.value.trim();
+  qOut.innerHTML = ""; qMsg.textContent = "Looking…";
   const prof = await api("/rest/v1/gd_profiles?or=(handle.ilike." + encodeURIComponent(q) + ",code.eq." + encodeURIComponent(q.toUpperCase()) + ")&select=id,handle,code,rating,solved&limit=5");
-  if (!prof.ok || !(prof.data || []).length) { msg.textContent = "Nobody found."; return; }
-  msg.textContent = "";
+  if (!prof.ok || !(prof.data || []).length) { qMsg.textContent = "Nobody found by that name or code."; return; }
+  qMsg.textContent = "";
   for (const p of prof.data) {
-    const cards = await api("/rest/v1/gd_cards?handle=eq." + encodeURIComponent(p.handle) + "&select=day,n,secs&order=created_at.desc&limit=5");
-    out.innerHTML += '<div class="item"><b>' + esc(p.handle) + "</b> · " + esc(p.code) + " · rating " + esc(p.rating || "—") + " · solved " + esc(p.solved || 0) +
-      "<small>recent cards: " + esc((cards.data || []).map((c) => c.n + "×" + c.n + " " + c.secs + "s (" + c.day + ")").join(", ") || "none") + "</small></div>";
+    const [cards, answers] = await Promise.all([
+      api("/rest/v1/gd_cards?handle=eq." + encodeURIComponent(p.handle) + "&select=id,day,n,secs&order=created_at.desc&limit=6"),
+      api("/rest/v1/gd_answers?challenger=eq." + encodeURIComponent(p.handle) + "&select=secs,won,created_at&order=created_at.desc&limit=6"),
+    ]);
+    qOut.innerHTML += '<div class="item"><b>' + esc(p.handle) + "</b> · " + esc(p.code) + " · rating " + esc(p.rating || "—") + " · solved " + esc(p.solved || 0) +
+      "<small>account: <code>" + esc(p.id) + "</code></small>" +
+      "<small>cards: " + esc((cards.data || []).map((c) => c.n + "×" + c.n + " " + c.secs + "s").join(", ") || "none") + "</small>" +
+      "<small>answers: " + esc((answers.data || []).map((a) => (a.won ? "W" : "L") + " " + a.secs + "s").join(", ") || "none") + "</small>" +
+      '<button class="mini" onclick="renameHandle(\'' + p.id + '\',\'' + esc(p.handle) + '\')">RENAME</button>' +
+      '<button class="mini" onclick="viewSaveById(\'' + p.id + '\')">VIEW SAVE</button>' +
+      "</div>";
   }
 }
+async function renameHandle(id, oldName) {
+  const nx = prompt("New handle for " + oldName + ":", oldName);
+  if (!nx || nx === oldName) return;
+  const r = await api("/rest/v1/gd_profiles?id=eq." + id, { method: "PATCH", body: JSON.stringify({ handle: nx.trim().slice(0, 16) }) });
+  toast(r.ok ? "Renamed." : (needsV2(r.status) ? "Needs master-control-2.sql." : "Failed (" + r.status + ")"), !r.ok);
+  lookup();
+}
+
+// ---------- SAVES ----------
+async function paneSaves() {
+  const host = document.getElementById("paneHost");
+  host.innerHTML = '<div class="card"><h2>CLOUD SAVE — customer service</h2>' +
+    '<label>Account id (from PLAYERS → account)</label>' +
+    '<div class="row"><input id="sId" placeholder="uuid" onkeydown="if(event.key===\'Enter\')viewSave()" /><button style="margin-top:0" onclick="viewSave()">OPEN</button></div>' +
+    '<div class="msg" id="sMsg"></div><div id="sOut"></div></div>';
+}
+function viewSaveById(id) { show("saves"); setTimeout(() => { sId.value = id; viewSave(); }, 50); }
+async function viewSave() {
+  const id = sId.value.trim();
+  sOut.innerHTML = ""; sMsg.textContent = "Opening…";
+  const r = await api("/rest/v1/gd_saves?user_id=eq." + encodeURIComponent(id) + "&select=save,updated_at,device");
+  if (!r.ok) { sMsg.textContent = "Could not read (" + r.status + ")."; return; }
+  if (!(r.data || []).length) { sMsg.textContent = "No cloud save for that account (they may not have synced yet)."; return; }
+  const row = r.data[0]; const sv = row.save || {};
+  sMsg.textContent = "";
+  sOut.innerHTML = '<div class="item">Updated ' + esc((row.updated_at || "").slice(0, 16).replace("T", " ")) + " on " + esc(row.device || "?") +
+    "<small>wins " + esc(sv.wins || 0) + " · coins " + esc(sv.coins || 0) + " · vs rating " + esc((sv.vs || {}).elo || "—") +
+    " · duels " + esc((sv.vs || {}).plays || 0) + " · solves logged " + esc((sv.solveLog || []).length) + "</small></div>" +
+    '<button class="mini" onclick="downloadSave()">DOWNLOAD JSON</button>' +
+    '<div style="margin-top:10px"><label>Repair (edit carefully, then write back)</label><textarea id="sJson" style="min-height:140px">' + esc(JSON.stringify(sv, null, 1).slice(0, 20000)) + "</textarea>" +
+    '<button class="bad" onclick="writeSaveBack(\'' + esc(id) + '\')">WRITE SAVE BACK</button></div>';
+  window._saveBlob = JSON.stringify(sv, null, 2);
+}
+function downloadSave() {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([window._saveBlob || "{}"], { type: "application/json" }));
+  a.download = "kenken-save.json"; a.click();
+}
+async function writeSaveBack(id) {
+  let parsed;
+  try { parsed = JSON.parse(sJson.value); } catch (e) { toast("That is not valid JSON — nothing written.", true); return; }
+  if (!confirm("Write this save back? The player's next launch will pull it.")) return;
+  const r = await api("/rest/v1/gd_saves?user_id=eq." + encodeURIComponent(id), { method: "PATCH", body: JSON.stringify({ save: parsed, updated_at: new Date().toISOString() }) });
+  toast(r.ok ? "Written." : (needsV2(r.status) ? "Needs master-control-2.sql." : "Failed (" + r.status + ")"), !r.ok);
+}
+
+// ---------- MODERATION ----------
+async function paneModeration() {
+  const host = document.getElementById("paneHost");
+  host.innerHTML = '<div class="card"><h2>RECENT CARDS — remove anything that does not belong</h2><div id="modCards">Loading…</div></div>' +
+    '<div class="card"><h2>RECENT LEADERBOARD ROWS</h2><div id="modScores">Loading…</div></div>';
+  const cards = await api("/rest/v1/gd_cards?select=id,handle,day,n,secs&order=created_at.desc&limit=15");
+  document.getElementById("modCards").innerHTML = (cards.data || []).map((c) =>
+    '<div class="item">' + esc(c.handle) + " · " + c.n + "×" + c.n + " · " + c.secs + "s<small>" + esc(c.day) + "</small>" +
+    '<button class="mini bad" onclick="if(confirm(\'Delete this card?\'))modDel(\'gd_cards\',' + c.id + ')">DELETE</button></div>').join("") || '<div class="item">None.</div>';
+  const sc = await api("/rest/v1/scores?select=id,handle,day,secs,diff&order=id.desc&limit=15");
+  document.getElementById("modScores").innerHTML = !sc.ok ? '<div class="item">Could not load scores (' + sc.status + ").</div>" :
+    (sc.data || []).map((x) =>
+      '<div class="item">' + esc(x.handle) + " · " + esc(x.diff || "") + " · " + x.secs + "s<small>" + esc(x.day) + "</small>" +
+      '<button class="mini bad" onclick="if(confirm(\'Delete this row?\'))modDel(\'scores\',' + x.id + ')">DELETE</button></div>').join("") || '<div class="item">None.</div>';
+}
+async function modDel(table, id) {
+  const r = await api("/rest/v1/" + table + "?id=eq." + id, { method: "DELETE" });
+  toast(r.ok ? "Deleted." : (needsV2(r.status) ? "Needs master-control-2.sql." : "Failed (" + r.status + ")"), !r.ok);
+  paneModeration();
+}
+
+// ---------- TEAM ----------
+async function paneTeam() {
+  const host = document.getElementById("paneHost");
+  host.innerHTML = '<div class="card"><h2>THE TEAM</h2><div id="teamList">Loading…</div>' +
+    '<div class="row"><div><label>Add by account id</label><input id="tId" placeholder="uuid" /></div><div><label>Label</label><input id="tLabel" placeholder="who this is" /></div></div>' +
+    '<button onclick="addTeam()">ADD TO TEAM</button><div class="msg" id="tMsg"></div></div>';
+  const r = await api("/rest/v1/gd_admins?select=user_id,label,created_at&order=created_at.asc");
+  document.getElementById("teamList").innerHTML = !r.ok ? V2NOTE :
+    (r.data || []).map((a) =>
+      '<div class="item"><code>' + esc(a.user_id) + "</code> " + esc(a.label || "") +
+      '<button class="mini bad" onclick="if(confirm(\'Remove this team member?\'))delTeam(\'' + a.user_id + '\')">REMOVE</button></div>').join("");
+}
+async function addTeam() {
+  const r = await api("/rest/v1/gd_admins", { method: "POST", body: JSON.stringify({ user_id: tId.value.trim(), label: tLabel.value.trim() || null }) });
+  document.getElementById("tMsg").textContent = r.ok ? "Added." : (needsV2(r.status) ? "Needs master-control-2.sql." : "Failed (" + r.status + "): " + r.txt.slice(0, 100));
+  paneTeam();
+}
+async function delTeam(id) {
+  const r = await api("/rest/v1/gd_admins?user_id=eq." + id, { method: "DELETE" });
+  toast(r.ok ? "Removed." : "Failed (" + r.status + ")", !r.ok);
+  paneTeam();
+}
+
+const PANES = { overview: paneOverview, news: paneNews, grants: paneGrants, players: panePlayers, saves: paneSaves, moderation: paneModeration, team: paneTeam };
 boot();
 </script>
 </body>
