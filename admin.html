@@ -317,11 +317,11 @@ async function paneModeration() {
   document.getElementById("modCards").innerHTML = (cards.data || []).map((c) =>
     '<div class="item">' + esc(c.handle) + " · " + c.n + "×" + c.n + " · " + c.secs + "s<small>" + esc(c.day) + "</small>" +
     '<button class="mini bad" onclick="if(confirm(\'Delete this card?\'))modDel(\'gd_cards\',' + c.id + ')">DELETE</button></div>').join("") || '<div class="item">None.</div>';
-  const sc = await api("/rest/v1/scores?select=id,handle,day,secs,diff&order=id.desc&limit=15");
+  const sc = await api("/rest/v1/gd_daily_scores?select=id,name,day,secs,diff&order=id.desc&limit=15");
   document.getElementById("modScores").innerHTML = !sc.ok ? '<div class="item">Could not load scores (' + sc.status + ").</div>" :
     (sc.data || []).map((x) =>
-      '<div class="item">' + esc(x.handle) + " · " + esc(x.diff || "") + " · " + x.secs + "s<small>" + esc(x.day) + "</small>" +
-      '<button class="mini bad" onclick="if(confirm(\'Delete this row?\'))modDel(\'scores\',' + x.id + ')">DELETE</button></div>').join("") || '<div class="item">None.</div>';
+      '<div class="item">' + esc(x.name) + " · " + esc(x.diff || "") + " · " + x.secs + "s<small>" + esc(x.day) + "</small>" +
+      '<button class="mini bad" onclick="if(confirm(\'Delete this row?\'))modDel(\'gd_daily_scores\',' + x.id + ')">DELETE</button></div>').join("") || '<div class="item">None.</div>';
 }
 async function modDel(table, id) {
   const r = await api("/rest/v1/" + table + "?id=eq." + id, { method: "DELETE" });
