@@ -84,6 +84,25 @@ const ANON = "sb_publishable_gWiColAMblYHGAcQJOx-Aw_xOltTJnq";
 function session() {
   try { return JSON.parse(localStorage.getItem("gd-auth") || "null"); } catch (e) { return null; }
 }
+// Tokens expire in about an hour; the game refreshes its own, and so must we.
+async function freshSession() {
+  const s = session();
+  if (!s) return null;
+  if (s.access_token && s.expires_at && s.expires_at > Date.now() / 1000 + 60) return s;
+  if (!s.refresh_token) return s;
+  try {
+    const r = await fetch(URL_BASE + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: { apikey: ANON, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: s.refresh_token }),
+    });
+    if (!r.ok) return s;
+    const j = await r.json();
+    const nx = { access_token: j.access_token, refresh_token: j.refresh_token, user_id: (j.user && j.user.id) || s.user_id, expires_at: Math.floor(Date.now() / 1000) + (j.expires_in || 3600) };
+    localStorage.setItem("gd-auth", JSON.stringify(nx));
+    return nx;
+  } catch (e) { return s; }
+}
 function H() {
   const s = session();
   return { apikey: ANON, Authorization: "Bearer " + ((s && s.access_token) || ANON), "Content-Type": "application/json" };
@@ -97,22 +116,26 @@ async function api(path, opts) {
 function esc(x) { const d = document.createElement("div"); d.textContent = String(x == null ? "" : x); return d.innerHTML; }
 
 async function boot() {
-  const s = session();
+  const s = await freshSession();
   const who = document.getElementById("whoBody");
   if (!s || !s.access_token) {
-    who.innerHTML = '<span class="err">No game session found. Open the game on this device first (and sign in under THE ACCOUNT), then reload this page.</span>';
+    who.innerHTML = '<span class="err">No game session found. Open the game on this device first, then reload this page.</span>';
     return;
   }
   // The server says whether this account is on the team; nothing here decides.
   const probe = await api("/rest/v1/rpc/gd_is_admin", { method: "POST", body: "{}" });
+  const insert = "insert into public.gd_admins (user_id, label) values ('" + (s.user_id || "?") + "', 'team');";
   if (probe.ok && probe.data === true) {
     who.innerHTML = "Signed in as team. <span class='pill'>ADMIN</span>";
     document.getElementById("tools").style.display = "";
     listNews();
   } else if (probe.ok) {
-    who.innerHTML = '<span class="err">This account is not on the team. Ask an owner to add your user id to gd_admins (docs/MASTER-CONTROL.md, step 2).</span>';
+    who.innerHTML = '<span class="err">This browser\'s account is not on the team yet.</span>' +
+      '<div style="margin-top:8px;font-size:12px;color:#7c86ad">This account id: <code>' + esc(s.user_id || "?") + "</code></div>" +
+      '<button onclick="navigator.clipboard.writeText(\'' + insert + '\').then(()=>{this.textContent=\'COPIED — paste it in the SQL editor and Run\'})">COPY THE ADD-ME LINE</button>' +
+      '<div style="margin-top:6px;font-size:12px;color:#7c86ad">Then: Supabase → SQL Editor → paste → Run → reload this page.</div>';
   } else {
-    who.innerHTML = '<span class="err">Could not check (' + probe.status + "). Has supabase/master-control.sql been run?</span>";
+    who.innerHTML = '<span class="err">Could not check (' + probe.status + "). If this keeps happening, reload the game once (it renews the session), then reload this page.</span>";
   }
 }
 
