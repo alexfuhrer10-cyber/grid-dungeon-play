@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>KENKEN MASTER CONTROL</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0b0e1a; color: #dfe6ff; font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 16px; letter-spacing: 3px; color: #7df3ff; margin: 0 0 4px; }
+  .sub { color: #7c86ad; font-size: 12px; margin: 0 0 20px; }
+  .card { background: #121732; border: 1px solid #2a3260; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .card h2 { font-size: 12px; letter-spacing: 2px; color: #fbbf24; margin: 0 0 10px; }
+  label { display: block; font-size: 11px; letter-spacing: 1px; color: #7c86ad; margin: 8px 0 3px; }
+  input, textarea, select { width: 100%; background: #0b0e1a; border: 1px solid #2a3260; border-radius: 7px; color: #dfe6ff; padding: 9px 10px; font: inherit; }
+  textarea { min-height: 64px; resize: vertical; }
+  button { background: #16324a; border: 1px solid #7df3ff88; color: #7df3ff; border-radius: 7px; padding: 9px 14px; font: inherit; font-weight: 700; letter-spacing: 1px; cursor: pointer; margin-top: 10px; }
+  button.warn { border-color: #fbbf2488; color: #fbbf24; background: #33270e; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  .msg { font-size: 12px; color: #8ef3b0; margin-top: 8px; white-space: pre-wrap; }
+  .err { color: #ff7a90; }
+  .item { border-top: 1px solid #2a326055; padding: 8px 0; font-size: 13px; }
+  .item small { color: #7c86ad; display: block; }
+  .pill { display: inline-block; font-size: 10px; letter-spacing: 1px; border: 1px solid #2a3260; border-radius: 999px; padding: 1px 8px; color: #7c86ad; margin-left: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>KENKEN MASTER CONTROL</h1>
+  <p class="sub">Internal team only. Every action here is checked server-side (RLS) — this page holds no secrets and grants nothing by itself.</p>
+
+  <div class="card" id="who">
+    <h2>WHO AM I</h2>
+    <div id="whoBody">Checking the session from the game…</div>
+  </div>
+
+  <div id="tools" style="display:none">
+    <div class="card">
+      <h2>POST NEWS — appears in-game instantly</h2>
+      <label>Title</label><input id="nTitle" maxlength="120" placeholder="THE HEADLINE" />
+      <label>Body</label><textarea id="nBody" placeholder="A sentence or two."></textarea>
+      <label>Link (optional)</label><input id="nUrl" placeholder="https://…" />
+      <div class="row">
+        <div><label>Tag</label><select id="nTag"><option>news</option><option>update</option><option>event</option><option>people</option></select></div>
+        <div><label>Pinned</label><select id="nPin"><option value="false">no</option><option value="true">yes</option></select></div>
+      </div>
+      <button onclick="postNews()">POST IT</button>
+      <div class="msg" id="nMsg"></div>
+      <div id="newsList"></div>
+    </div>
+
+    <div class="card">
+      <h2>ISSUE A GRANT — comps &amp; kenken.com backlog</h2>
+      <label>Email (one, exact)</label><input id="gEmail" placeholder="player@example.com" />
+      <div class="row">
+        <div><label>Kind</label><select id="gKind"><option>premium</option><option>coins</option><option>skin</option><option>note</option></select></div>
+        <div><label>Value (sku, or coin amount)</label><input id="gValue" placeholder="kenken_premium" /></div>
+      </div>
+      <label>Note (internal)</label><input id="gNote" placeholder="why" />
+      <button onclick="addGrant()">GRANT IT</button>
+      <div class="msg" id="gMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>LOOK SOMEBODY UP</h2>
+      <label>Handle or friend code</label>
+      <div class="row"><input id="qWho" placeholder="RILEY or AB12CD" /><button style="margin-top:0" onclick="lookup()">FIND</button></div>
+      <div class="msg" id="qMsg"></div>
+      <div id="qOut"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const URL_BASE = "https://kwxloloxyovduapgormo.supabase.co";
+const ANON = "sb_publishable_gWiColAMblYHGAcQJOx-Aw_xOltTJnq";
+
+// The session comes from the GAME on the same origin: open the game, make
+// sure you are signed in (THE ACCOUNT), then open this page.
+function session() {
+  try { return JSON.parse(localStorage.getItem("gd-auth") || "null"); } catch (e) { return null; }
+}
+function H() {
+  const s = session();
+  return { apikey: ANON, Authorization: "Bearer " + ((s && s.access_token) || ANON), "Content-Type": "application/json" };
+}
+async function api(path, opts) {
+  const r = await fetch(URL_BASE + path, Object.assign({ headers: H() }, opts || {}));
+  const txt = await r.text();
+  let data = null; try { data = JSON.parse(txt); } catch (e) {}
+  return { ok: r.ok, status: r.status, data, txt };
+}
+function esc(x) { const d = document.createElement("div"); d.textContent = String(x == null ? "" : x); return d.innerHTML; }
+
+async function boot() {
+  const s = session();
+  const who = document.getElementById("whoBody");
+  if (!s || !s.access_token) {
+    who.innerHTML = '<span class="err">No game session found. Open the game on this device first (and sign in under THE ACCOUNT), then reload this page.</span>';
+    return;
+  }
+  // The server says whether this account is on the team; nothing here decides.
+  const probe = await api("/rest/v1/rpc/gd_is_admin", { method: "POST", body: "{}" });
+  if (probe.ok && probe.data === true) {
+    who.innerHTML = "Signed in as team. <span class='pill'>ADMIN</span>";
+    document.getElementById("tools").style.display = "";
+    listNews();
+  } else if (probe.ok) {
+    who.innerHTML = '<span class="err">This account is not on the team. Ask an owner to add your user id to gd_admins (docs/MASTER-CONTROL.md, step 2).</span>';
+  } else {
+    who.innerHTML = '<span class="err">Could not check (' + probe.status + "). Has supabase/master-control.sql been run?</span>";
+  }
+}
+
+async function listNews() {
+  const r = await api("/rest/v1/gd_news?select=id,title,tag,pinned,published&order=created_at.desc&limit=10");
+  if (!r.ok) return;
+  document.getElementById("newsList").innerHTML = (r.data || []).map((n) =>
+    '<div class="item">' + esc(n.title) + '<span class="pill">' + esc(n.tag) + (n.pinned ? " · pinned" : "") + (n.published ? "" : " · HIDDEN") + "</span>" +
+    ' <button class="warn" style="padding:3px 10px;margin:4px 0 0" onclick="toggleNews(' + n.id + "," + !n.published + ')">' + (n.published ? "HIDE" : "SHOW") + "</button></div>"
+  ).join("");
+}
+async function toggleNews(id, pub) {
+  await api("/rest/v1/gd_news?id=eq." + id, { method: "PATCH", body: JSON.stringify({ published: pub }) });
+  listNews();
+}
+async function postNews() {
+  const body = {
+    title: document.getElementById("nTitle").value.trim(),
+    body: document.getElementById("nBody").value.trim(),
+    url: document.getElementById("nUrl").value.trim() || null,
+    tag: document.getElementById("nTag").value,
+    pinned: document.getElementById("nPin").value === "true",
+  };
+  const r = await api("/rest/v1/gd_news", { method: "POST", body: JSON.stringify(body) });
+  document.getElementById("nMsg").textContent = r.ok ? "Posted. It is live in the game now." : "Failed (" + r.status + "): " + r.txt.slice(0, 140);
+  document.getElementById("nMsg").className = "msg" + (r.ok ? "" : " err");
+  if (r.ok) { document.getElementById("nTitle").value = ""; document.getElementById("nBody").value = ""; document.getElementById("nUrl").value = ""; listNews(); }
+}
+async function addGrant() {
+  const body = {
+    email: document.getElementById("gEmail").value.trim(),
+    kind: document.getElementById("gKind").value,
+    value: document.getElementById("gValue").value.trim(),
+    note: document.getElementById("gNote").value.trim() || null,
+  };
+  const r = await api("/rest/v1/gd_grants", { method: "POST", body: JSON.stringify(body) });
+  document.getElementById("gMsg").textContent = r.ok ? "Granted. It claims itself when that email is attached in-game." : "Failed (" + r.status + "): " + r.txt.slice(0, 140);
+  document.getElementById("gMsg").className = "msg" + (r.ok ? "" : " err");
+}
+async function lookup() {
+  const q = document.getElementById("qWho").value.trim();
+  const out = document.getElementById("qOut");
+  const msg = document.getElementById("qMsg");
+  out.innerHTML = ""; msg.textContent = "Looking…";
+  const prof = await api("/rest/v1/gd_profiles?or=(handle.ilike." + encodeURIComponent(q) + ",code.eq." + encodeURIComponent(q.toUpperCase()) + ")&select=id,handle,code,rating,solved&limit=5");
+  if (!prof.ok || !(prof.data || []).length) { msg.textContent = "Nobody found."; return; }
+  msg.textContent = "";
+  for (const p of prof.data) {
+    const cards = await api("/rest/v1/gd_cards?handle=eq." + encodeURIComponent(p.handle) + "&select=day,n,secs&order=created_at.desc&limit=5");
+    out.innerHTML += '<div class="item"><b>' + esc(p.handle) + "</b> · " + esc(p.code) + " · rating " + esc(p.rating || "—") + " · solved " + esc(p.solved || 0) +
+      "<small>recent cards: " + esc((cards.data || []).map((c) => c.n + "×" + c.n + " " + c.secs + "s (" + c.day + ")").join(", ") || "none") + "</small></div>";
+  }
+}
+boot();
+</script>
+</body>
+</html>
