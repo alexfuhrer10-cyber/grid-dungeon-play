@@ -85,6 +85,9 @@ async function api(path, opts) {
   return { ok: r.ok, status: r.status, data, txt };
 }
 function esc(x) { const d = document.createElement("div"); d.textContent = String(x == null ? "" : x); return d.innerHTML; }
+// The game keys every day by the player's LOCAL date (todayStr in the app), so
+// the console must too. Using UTC here featured tomorrow's board all evening.
+function dayStr(d) { d = d || new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function toast(msg, bad) {
   const t = document.getElementById("toast");
   t.textContent = msg; t.style.borderColor = bad ? "#ff7a9088" : "#7df3ff88"; t.style.opacity = 1;
@@ -123,7 +126,7 @@ async function paneOverview() {
   const host = document.getElementById("paneHost");
   host.innerHTML = '<div class="card"><h2>THE FLOOR, RIGHT NOW</h2><div class="grid" id="stats">Loading…</div></div>' +
     '<div class="card"><h2>LATEST ACTIVITY</h2><div id="activity">Loading…</div></div>';
-  const today = new Date().toISOString().slice(0, 10);
+  const today = dayStr();
   // counts via content-range
   async function countOf(q) {
     const r = await fetch(URL_BASE + "/rest/v1/" + q + "&limit=1", { headers: H({ Prefer: "count=exact" }) });
@@ -173,7 +176,7 @@ async function paneNews() {
   listFeatured();
 }
 async function listFeatured() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = dayStr();
   const cur = await api("/rest/v1/gd_featured?select=day,title,published&order=day.desc&limit=3");
   document.getElementById("featNow").innerHTML = !cur.ok
     ? V2NOTE.replace("master-control-2.sql", "featured.sql")
@@ -188,7 +191,7 @@ async function featureCard(cardId) {
   if (!cards.ok || !(cards.data || []).length) { toast("Could not read that card.", true); return; }
   const d = new Date();
   if (document.getElementById("fDay").value === "tomorrow") d.setDate(d.getDate() + 1);
-  const day = d.toISOString().slice(0, 10);
+  const day = dayStr(d);
   const body = { day, title: (document.getElementById("fTitle").value || "THE BOARD OF THE DAY").trim(), note: (document.getElementById("fNote").value || "").trim() || null, spec: cards.data[0].spec, published: true };
   const r = await api("/rest/v1/gd_featured?on_conflict=day", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify(body) });
   toast(r.ok ? "Featured for " + day + " — live in the game now." : (needsV2(r.status) ? "Needs featured.sql pasted first." : "Failed (" + r.status + ")"), !r.ok);
