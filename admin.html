@@ -161,8 +161,38 @@ async function paneNews() {
     '<div class="row"><div><label>Tag</label><select id="nTag"><option>news</option><option>update</option><option>event</option><option>people</option></select></div>' +
     '<div><label>Pinned</label><select id="nPin"><option value="false">no</option><option value="true">yes</option></select></div></div>' +
     '<button onclick="postNews()">POST IT</button></div>' +
-    '<div class="card"><h2>EVERY POST</h2><div id="newsList">Loading…</div></div>';
+    '<div class="card"><h2>EVERY POST</h2><div id="newsList">Loading…</div></div>' +
+    '<div class="card"><h2>THE TEAM\'S TABLE — feature a board</h2>' +
+    '<div id="featNow" class="msg"></div>' +
+    '<label>Title</label><input id="fTitle" maxlength="80" placeholder="THE BOARD OF THE DAY" />' +
+    '<label>Note (optional)</label><input id="fNote" placeholder="why this one" />' +
+    '<div class="row"><div><label>Day</label><select id="fDay"><option value="today">today</option><option value="tomorrow">tomorrow</option></select></div></div>' +
+    '<div class="msg">Pick any card below — its exact board becomes the day\'s table.</div>' +
+    '<div id="featCards">Loading…</div></div>';
   listNews();
+  listFeatured();
+}
+async function listFeatured() {
+  const today = new Date().toISOString().slice(0, 10);
+  const cur = await api("/rest/v1/gd_featured?select=day,title,published&order=day.desc&limit=3");
+  document.getElementById("featNow").innerHTML = !cur.ok
+    ? V2NOTE.replace("master-control-2.sql", "featured.sql")
+    : ((cur.data || []).map((f) => f.day + " · " + esc(f.title) + (f.published ? "" : " (hidden)")).join("<br>") || "Nothing featured yet.");
+  const cards = await api("/rest/v1/gd_cards?select=id,handle,n,secs,spec&order=created_at.desc&limit=10");
+  document.getElementById("featCards").innerHTML = (cards.data || []).map((c) =>
+    '<div class="item">' + esc(c.handle) + " · " + c.n + "×" + c.n + " · " + c.secs + "s" +
+    ' <button class="mini" onclick="featureCard(' + c.id + ')">FEATURE THIS BOARD</button></div>').join("") || '<div class="item">No cards yet.</div>';
+}
+async function featureCard(cardId) {
+  const cards = await api("/rest/v1/gd_cards?id=eq." + cardId + "&select=spec");
+  if (!cards.ok || !(cards.data || []).length) { toast("Could not read that card.", true); return; }
+  const d = new Date();
+  if (document.getElementById("fDay").value === "tomorrow") d.setDate(d.getDate() + 1);
+  const day = d.toISOString().slice(0, 10);
+  const body = { day, title: (document.getElementById("fTitle").value || "THE BOARD OF THE DAY").trim(), note: (document.getElementById("fNote").value || "").trim() || null, spec: cards.data[0].spec, published: true };
+  const r = await api("/rest/v1/gd_featured?on_conflict=day", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify(body) });
+  toast(r.ok ? "Featured for " + day + " — live in the game now." : (needsV2(r.status) ? "Needs featured.sql pasted first." : "Failed (" + r.status + ")"), !r.ok);
+  listFeatured();
 }
 async function listNews() {
   const r = await api("/rest/v1/gd_news?select=id,title,body,url,tag,pinned,published&order=pinned.desc,created_at.desc&limit=30");
