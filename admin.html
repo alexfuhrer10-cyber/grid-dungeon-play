@@ -95,6 +95,84 @@ function toast(msg, bad) {
   t.textContent = msg; t.style.borderColor = bad ? "#ff7a9088" : "#7df3ff88"; t.style.opacity = 1;
   clearTimeout(t._h); t._h = setTimeout(() => { t.style.opacity = 0; }, 2600);
 }
+// ---------- THE PULSE: who is playing RIGHT NOW ----------
+// Every other number on this page is cumulative and answers "how much has
+// ever happened". This one answers "is anybody in there", which is the only
+// question worth asking after a deploy or a featured board.
+//
+// It reads a shared Realtime topic that live clients beat on. No table, no
+// query, nothing written. Each beat carries an anonymous per-session id, the
+// tab they are on, and the build their cache is serving — never a name, an
+// account, or anything that could identify a person, because the topic is
+// reachable by anyone holding the publishable key.
+//
+// A client that closes the tab simply stops beating and ages out of the
+// count. Silence for 45 seconds (three missed beats) means gone.
+const PULSE_TOPIC = "kkd-pulse-v1";
+const PULSE_STALE = 45000;
+let PULSE = null;
+function watchPulse(onChange) {
+  const wsUrl = URL_BASE.replace(/^http/, "ws") + "/realtime/v1/websocket?apikey=" + encodeURIComponent(ANON) + "&vsn=1.0.0";
+  const topic = "realtime:" + PULSE_TOPIC;
+  const seen = new Map();
+  let ws = null, hb = null, roller = null, tick = null, ref = 0, dead = false;
+  const nextRef = () => String(++ref);
+  const push = (event, payload) => {
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ topic, event: "broadcast", payload: { type: "broadcast", event, payload }, ref: nextRef() }));
+  };
+  const tally = () => {
+    const now = Date.now();
+    for (const [k, v] of seen) if (now - v.at > PULSE_STALE) seen.delete(k);
+    const where = {}, builds = {};
+    for (const v of seen.values()) {
+      where[v.w || "?"] = (where[v.w || "?"] | 0) + 1;
+      if (v.b) builds[v.b] = (builds[v.b] | 0) + 1;
+    }
+    onChange({ live: seen.size, where, builds, connected: !!ws && ws.readyState === 1 });
+  };
+  function open() {
+    if (dead) return;
+    try { ws = new WebSocket(wsUrl); } catch (e) { return; }
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ topic, event: "phx_join", payload: { config: { broadcast: { self: false } } }, ref: nextRef() }));
+      hb = setInterval(() => { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ topic: "phoenix", event: "heartbeat", payload: {}, ref: nextRef() })); }, 25000);
+      // Roll call. Without it the console would take a full beat interval to
+      // see anybody, and would show zero next to a room full of people.
+      setTimeout(() => push("roll", { at: Date.now() }), 250);
+    };
+    ws.onmessage = (e) => {
+      let m; try { m = JSON.parse(e.data); } catch (err) { return; }
+      if (m.event !== "broadcast" || !m.payload || !m.payload.payload) return;
+      const pl = m.payload.payload;
+      if (!pl.id) return;
+      if (m.payload.event === "beat") { seen.set(pl.id, { w: pl.w || "?", b: pl.b || "", at: Date.now() }); tally(); }
+      else if (m.payload.event === "bye") { seen.delete(pl.id); tally(); }
+    };
+    ws.onclose = () => { clearInterval(hb); if (!dead) setTimeout(open, 1500); };
+    ws.onerror = () => {};
+  }
+  open();
+  roller = setInterval(() => push("roll", { at: Date.now() }), 20000);
+  tick = setInterval(tally, 5000);
+  return { stop() { dead = true; clearInterval(hb); clearInterval(roller); clearInterval(tick); try { ws && ws.close(); } catch (e) {} } };
+}
+// The tab names the game reports, in the words the team uses for them.
+// Anything not listed shows its raw screen id, which is still useful — a name
+// missing here is a cosmetic gap, never a lost player.
+const PULSE_WHERE = {
+  title: "The title screen", today: "Today", dailyhome: "The Daily", feedhome: "Home",
+  map: "Campaign", battle: "In a fight", dungeon: "The Battle Grid", minute: "The Minute",
+  duel: "Versus", duelboard: "Racing somebody", session: "The Session", dojo: "The Dojo",
+  board: "The Quiet Desk", twin: "The Twin", kt: "A Kentertainment", originals: "Miyamoto originals",
+  shop: "Store", wardrobe: "The Wardrobe", gallery: "Gallery", artgallery: "Gallery",
+  academy: "Academy", techtree: "The Technique Ledger", trials: "Focus Trials", train: "Training",
+  titles: "Titles & rating", roster: "Roster", profile: "Profile", notebook: "Notebook",
+  draft: "Picking gear", victory: "A victory screen", dead: "A defeat screen", debrief: "The readout",
+  road: "The Keeper Road", pass: "The Signal Pass", news: "The notice board",
+  prologue: "The prologue", intro: "The opening", story: "A story beat", howto: "Learning to play",
+};
+
 function needsV2(status) { return status === 401 || status === 403 || status === 404; }
 const V2NOTE = '<div class="msg err">This power needs supabase/master-control-2.sql — one more paste in the SQL editor unlocks it.</div>';
 
@@ -121,13 +199,45 @@ function renderTabs() {
   document.getElementById("tabs").innerHTML = TABS.map(([k, label]) =>
     '<button id="tab-' + k + '" class="' + (TAB === k ? "on" : "") + '" onclick="show(\'' + k + '\')">' + label + "</button>").join("");
 }
-function show(k) { TAB = k; renderTabs(); document.getElementById("paneHost").innerHTML = ""; PANES[k](); }
+function show(k) {
+  // The live listener holds a socket. Leaving the pane must close it, or the
+  // console quietly accumulates one connection per tab switch.
+  if (PULSE) { PULSE.stop(); PULSE = null; }
+  TAB = k; renderTabs(); document.getElementById("paneHost").innerHTML = ""; PANES[k]();
+}
 
 // ---------- OVERVIEW ----------
 async function paneOverview() {
   const host = document.getElementById("paneHost");
-  host.innerHTML = '<div class="card"><h2>THE FLOOR, RIGHT NOW</h2><div class="grid" id="stats">Loading…</div></div>' +
+  host.innerHTML = '<div class="card"><h2>PLAYING RIGHT NOW</h2><div id="pulseBody">Listening…</div>' +
+      '<div style="margin-top:10px;font-size:11px;color:#7c86ad">A live headcount, not a total. Anonymous: the game reports a throwaway session id, the tab, and its build — never a name. Anyone who closes the tab drops off within 45 seconds.</div></div>' +
+    '<div class="card"><h2>THE FLOOR, ALL TIME</h2><div class="grid" id="stats">Loading…</div></div>' +
     '<div class="card"><h2>LATEST ACTIVITY</h2><div id="activity">Loading…</div></div>';
+
+  // ---- the live count ----
+  if (PULSE) PULSE.stop();
+  let peak = 0;
+  PULSE = watchPulse(({ live, where, builds, connected }) => {
+    const el = document.getElementById("pulseBody");
+    if (!el) { PULSE.stop(); PULSE = null; return; }   // pane changed under us
+    if (live > peak) peak = live;
+    const rows = Object.entries(where).sort((a, b) => b[1] - a[1]);
+    const bs = Object.entries(builds).sort((a, b) => b[1] - a[1]);
+    el.innerHTML =
+      '<div class="grid">' +
+        '<div class="stat"><b>' + live + '</b><span>PLAYING NOW</span></div>' +
+        '<div class="stat"><b>' + peak + '</b><span>PEAK THIS SESSION</span></div>' +
+        '<div class="stat"><b>' + (connected ? "LIVE" : "…") + '</b><span>CONSOLE LINK</span></div>' +
+      "</div>" +
+      (rows.length
+        ? '<div style="margin-top:10px">' + rows.map(([w, n]) =>
+            '<div class="item">' + esc(PULSE_WHERE[w] || w) + '<small>' + n + (n === 1 ? " player" : " players") + "</small></div>").join("") + "</div>"
+        : '<div class="item" style="margin-top:10px">Nobody in the building this minute.<small>Open the game on your phone and it will appear here.</small></div>') +
+      (bs.length > 1
+        ? '<div class="msg err" style="margin-top:10px">Two builds are live at once: ' + bs.map(([b, n]) => esc(b) + " (" + n + ")").join(", ") + ". Somebody is on a stale cache.</div>"
+        : bs.length ? '<div style="margin-top:8px;font-size:11px;color:#7c86ad">All on ' + esc(bs[0][0]) + ".</div>" : "");
+  });
+
   const today = dayStr();
   // counts via content-range
   async function countOf(q) {
