@@ -37,7 +37,9 @@
   .pill.bad { color: #ff7a90; border-color: #ff7a9055; }
   .msg { font-size: 12px; color: #8ef3b0; margin-top: 8px; white-space: pre-wrap; }
   .err { color: #ff7a90; }
-  code { background: #0b0e1a; border: 1px solid #2a3260; border-radius: 5px; padding: 1px 6px; font-size: 12px; }
+  a { color: #7df3ff; }
+  ol li { margin: 2px 0; }
+  code { background: #0b0e1a; border: 1px solid #2a3260; border-radius: 5px; padding: 1px 6px; font-size: 12px; overflow-wrap: anywhere; }
   #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #16324a; border: 1px solid #7df3ff88; color: #dfe6ff; border-radius: 999px; padding: 10px 18px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 90vw; }
 </style>
 </head>
@@ -58,7 +60,7 @@
 <script>
 const URL_BASE = "https://kwxloloxyovduapgormo.supabase.co";
 const ANON = "sb_publishable_gWiColAMblYHGAcQJOx-Aw_xOltTJnq";
-const TABS = [["overview","OVERVIEW"],["news","NEWS"],["grants","GRANTS"],["players","PLAYERS"],["saves","SAVES"],["moderation","MODERATION"],["team","TEAM"]];
+const TABS = [["overview","OVERVIEW"],["news","NEWS"],["doors","SIGN-IN"],["grants","GRANTS"],["players","PLAYERS"],["saves","SAVES"],["moderation","MODERATION"],["team","TEAM"]];
 let TAB = "overview";
 
 function session() { try { return JSON.parse(localStorage.getItem("gd-auth") || "null"); } catch (e) { return null; } }
@@ -385,7 +387,189 @@ async function delTeam(id) {
   paneTeam();
 }
 
-const PANES = { overview: paneOverview, news: paneNews, grants: paneGrants, players: panePlayers, saves: paneSaves, moderation: paneModeration, team: paneTeam };
+
+// ---------- SIGN-IN (kkd-466): the setup checklist that checks itself ----------
+//
+// Every provider is a switch in somebody else's dashboard, so the only useful
+// version of this page is one that ASKS the server what is actually on and
+// shows the owner the truth. Green means a player can use it right now.
+const GD_CALLBACK = "https://kwxloloxyovduapgormo.supabase.co/auth/v1/callback";
+const GD_DASH = "https://supabase.com/dashboard/project/kwxloloxyovduapgormo";
+const GD_GAME_URL = "https://alexfuhrer10-cyber.github.io/grid-dungeon-play/";
+
+const DOORS = [
+  { id: "discord", key: "discord", name: "DISCORD", effort: "5 minutes", why: "The easiest one. Start here to see the whole thing work end to end.",
+    console: "https://discord.com/developers/applications",
+    steps: [
+      "Click New Application. Name it KenKen Dungeon. Accept the terms, Create.",
+      "Left sidebar: OAuth2. Under Redirects click Add Redirect, paste the callback URL, then Save Changes at the bottom.",
+      "On that same OAuth2 page copy CLIENT ID, then click Reset Secret to reveal CLIENT SECRET and copy that too.",
+    ] },
+  { id: "google", key: "google", name: "GOOGLE", effort: "15 minutes", why: "The widest reach — most players already have one.",
+    console: "https://console.cloud.google.com/apis/credentials",
+    steps: [
+      "Create a project if you have none (top-left project picker, NEW PROJECT).",
+      "Left sidebar: OAuth consent screen. Choose External, fill in app name, your email, and Save through to the end.",
+      "Back on Credentials: CREATE CREDENTIALS, then OAuth client ID, type Web application.",
+      "Under Authorised redirect URIs click ADD URI and paste the callback URL. Create.",
+      "A box shows Client ID and Client secret. Copy both.",
+    ] },
+  { id: "facebook", key: "facebook", name: "FACEBOOK", effort: "30 minutes + review", why: "Needs a privacy-policy URL and Facebook's app review before anyone outside your test accounts can use it.",
+    console: "https://developers.facebook.com/apps",
+    steps: [
+      "Create app, pick Authenticate and request data from users with Facebook Login.",
+      "In the app: Facebook Login, then Settings. Paste the callback URL into Valid OAuth Redirect URIs, Save changes.",
+      "App settings, then Basic: copy App ID and App secret (click Show).",
+      "Same page: add a Privacy Policy URL — Facebook will not let the app go live without one.",
+    ] },
+  { id: "twitter", key: "twitter", name: "X (TWITTER)", effort: "20 minutes", why: "Check the current free-tier terms before relying on it.",
+    console: "https://developer.x.com/en/portal/dashboard",
+    steps: [
+      "Create a project and an app inside it.",
+      "In the app: User authentication settings, Set up. Turn on OAuth 2.0. App type: Web App.",
+      "Paste the callback URL into Callback URI / Redirect URL. Add your website URL. Save.",
+      "Copy the Client ID and Client Secret it shows you (the secret is shown once).",
+    ] },
+  { id: "linkedin_oidc", key: "linkedin_oidc", name: "LINKEDIN", effort: "20 minutes", why: "Use the OpenID Connect product, not the old one. The game hides the deprecated version so there is never a second LinkedIn button.",
+    console: "https://www.linkedin.com/developers/apps",
+    steps: [
+      "Create app. It must be attached to a LinkedIn Company Page you control.",
+      "Products tab: request Sign In with LinkedIn using OpenID Connect.",
+      "Auth tab: paste the callback URL under Authorized redirect URLs for your app.",
+      "Same Auth tab: copy Client ID and Client Secret.",
+    ] },
+  { id: "apple", key: "apple", name: "APPLE", effort: "45 minutes, paid account", why: "REQUIRED by App Store rules if the game ships to iOS with any other social login. Leave it until an iOS build is real.",
+    console: "https://developer.apple.com/account/resources/identifiers/list/serviceId",
+    steps: [
+      "Needs a paid Apple Developer account ($99/yr).",
+      "Create an App ID, then a Services ID, and enable Sign In with Apple on it.",
+      "Configure the Services ID: paste the callback URL as the Return URL.",
+      "Keys: create a Sign In with Apple key and download the .p8 file (once only).",
+      "Supabase asks for the Services ID plus a secret key built from that .p8 — its provider page has a generator.",
+    ] },
+];
+
+// COPY THAT ACTUALLY COPIES.
+//
+// navigator.clipboard refuses whenever the page is not focused, which is how
+// the owner's COPY button failed once already. So: try the modern API, fall
+// back to the old execCommand, and if even that is refused, SELECT the text on
+// the page so a plain Cmd+C finishes the job. The button never leaves anybody
+// holding nothing.
+function copyBit(text, note, srcId) {
+  function legacy() {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed"; ta.style.top = "-1000px";
+      document.body.appendChild(ta);
+      ta.select(); ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+  function selectOnPage() {
+    const el = srcId && document.getElementById(srcId);
+    if (!el) { toast("Could not copy. Select the text and press Cmd+C.", true); return; }
+    try {
+      const r = document.createRange(); r.selectNodeContents(el);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      toast("Selected it for you — press Cmd+C.", true);
+    } catch (e) { toast("Could not copy. Select the text and press Cmd+C.", true); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      function () { toast(note || "Copied."); },
+      function () { if (legacy()) toast(note || "Copied."); else selectOnPage(); });
+  } else if (legacy()) { toast(note || "Copied."); }
+  else selectOnPage();
+}
+
+async function paneDoors() {
+  const host = document.getElementById("paneHost");
+  host.innerHTML = '<div class="card"><h2>WHAT IS ON RIGHT NOW</h2><div id="doorStatus">Asking the server…</div></div>' +
+    '<div class="card"><h2>STEP 1 &middot; TWO SETTINGS, ONCE</h2><div id="doorPre"></div></div>' +
+    '<div class="card"><h2>STEP 2 &middot; THE PROVIDERS</h2><p class="sub" style="margin:0 0 4px">Do them in any order. Each one is the same shape: make an app on their site, paste ONE URL into it, paste two values back into Supabase.</p><div id="doorList"></div></div>';
+
+  // The callback URL and the two return addresses, each one click away.
+  document.getElementById("doorPre").innerHTML =
+    '<div class="item" style="border-top:none">' +
+      '<b>A. Turn on account linking.</b><small>Without it, a player who taps CONNECT is told linking is switched off. With it, they keep their rating and dojo seat.</small>' +
+      '<div style="margin-top:6px"><a href="' + GD_DASH + '/settings/auth" target="_blank" rel="noopener">Open Authentication settings</a>' +
+      ' &middot; search the page for <code>manual linking</code> and turn it on.</div>' +
+    '</div>' +
+    '<div class="item">' +
+      '<b>B. Allow the game to be returned to.</b><small>A provider will refuse to send a player back to an address that is not on this list.</small>' +
+      '<div style="margin-top:6px"><a href="' + GD_DASH + '/auth/url-configuration" target="_blank" rel="noopener">Open URL Configuration</a> &middot; add both of these under Redirect URLs:</div>' +
+      '<div style="margin-top:6px"><code id="cb-game">' + GD_GAME_URL + '</code> <button class="mini" onclick="copyBit(\'' + GD_GAME_URL + '\', \'Game URL copied.\', \'cb-game\')">COPY</button></div>' +
+      '<div style="margin-top:4px"><code id="cb-local">http://localhost:5183/</code> <button class="mini" onclick="copyBit(\'http://localhost:5183/\', \'Local URL copied.\', \'cb-local\')">COPY</button></div>' +
+    '</div>';
+
+  document.getElementById("doorList").innerHTML = DOORS.map(function (d) {
+    return '<div class="item" id="door-' + d.id + '">' +
+      '<b>' + d.name + '</b> <span class="pill" id="pill-' + d.id + '">checking…</span>' +
+      '<small>' + d.effort + ' &middot; ' + d.why + '</small>' +
+      '<div style="margin-top:7px"><a href="' + d.console + '" target="_blank" rel="noopener">1. Open their developer console</a></div>' +
+      '<ol style="margin:6px 0 0;padding-left:18px;color:#9aa4c8;font-size:12.5px">' +
+        d.steps.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") +
+      '</ol>' +
+      '<div style="margin-top:7px">The URL every one of them asks for: <code id="cb-' + d.id + '">' + GD_CALLBACK + '</code>' +
+      ' <button class="mini" onclick="copyBit(\'' + GD_CALLBACK + '\', \'Callback URL copied.\', \'cb-' + d.id + '\')">COPY</button></div>' +
+      '<div style="margin-top:6px"><a href="' + GD_DASH + '/auth/providers" target="_blank" rel="noopener">2. Open Supabase providers</a>' +
+      ' &middot; find ' + d.name + ', toggle it on, paste the Client ID and Client Secret, Save.</div>' +
+    '</div>';
+  }).join("");
+
+  await refreshDoors();
+}
+
+async function refreshDoors() {
+  let ext = null;
+  try {
+    const r = await fetch(URL_BASE + "/auth/v1/settings", { headers: { apikey: ANON } });
+    if (r.ok) { const j = await r.json(); ext = (j && j.external) || {}; }
+  } catch (e) { /* shown as unknown below */ }
+
+  // Manual linking has no settings flag, so ask the endpoint itself. GoTrue
+  // checks linking BEFORE it checks the provider, so this answers even while
+  // every provider is still off.
+  let linking = "unknown";
+  try {
+    const r2 = await fetch(URL_BASE + "/auth/v1/user/identities/authorize?provider=google", { headers: H() });
+    const j2 = await r2.json().catch(function () { return {}; });
+    const msg = String(j2.error_description || j2.msg || j2.message || "");
+    if (r2.ok) linking = "on";
+    else if (msg.toLowerCase().indexOf("manual linking") >= 0) linking = "off";
+    else linking = "on";
+  } catch (e) { /* leave unknown */ }
+
+  const live = DOORS.filter(function (d) { return ext && ext[d.key] === true; }).length;
+  document.getElementById("doorStatus").innerHTML =
+    (ext === null
+      ? '<span class="err">Could not reach the auth server.</span>'
+      : '<div class="grid">' +
+          '<div class="stat"><b>' + live + '</b><span>PROVIDERS LIVE</span></div>' +
+          '<div class="stat"><b style="font-size:15px;color:' + (linking === "on" ? "#8ef3b0" : "#ff7a90") + '">' + (linking === "on" ? "ON" : linking === "off" ? "OFF" : "?") + '</b><span>ACCOUNT LINKING</span></div>' +
+          '<div class="stat"><b style="font-size:15px;color:#8ef3b0">ON</b><span>EMAIL</span></div>' +
+        '</div>' +
+        '<p class="sub" style="margin:10px 0 0">' + (live === 0
+          ? "No social buttons in the game yet — players see email only, and are told the rest arrive when you switch them on."
+          : live + " button" + (live === 1 ? " is" : "s are") + " live in the game right now. Players may need to reload once.") +
+        (linking === "off" ? " Account linking is OFF, so CONNECT will tell players to use SIGN IN instead — do step 1A." : "") + "</p>" +
+        '<button class="mini" onclick="refreshDoors()">CHECK AGAIN</button>');
+
+  DOORS.forEach(function (d) {
+    const el = document.getElementById("pill-" + d.id);
+    if (!el) return;
+    const on = ext && ext[d.key] === true;
+    el.className = "pill " + (on ? "ok" : "");
+    el.textContent = on ? "LIVE IN THE GAME" : "not on yet";
+  });
+}
+
+const PANES = { overview: paneOverview, news: paneNews, doors: paneDoors, grants: paneGrants, players: panePlayers, saves: paneSaves, moderation: paneModeration, team: paneTeam };
 boot();
 </script>
 </body>
