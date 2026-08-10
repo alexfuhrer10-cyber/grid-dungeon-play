@@ -5,14 +5,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>CAGE FALL</title>
 <style>
+  /* FALLBACKS ONLY. shell.js sets all of these plus the semantic layer
+     (--panel, --cell, --sel, --rule, the verdict washes) as inline properties
+     on <html>, which beat these. This file carries its own stylesheet rather
+     than linking the arcade's, so it has to declare the defaults itself or a
+     direct open is unstyled. */
   :root{
-    --bg:#0a0716; --ink:#f2efff; --dim:#a49cd0; --dim2:#7e76a8;
+    --bg:#0a0716; --bgDeep:#05030d; --surf:#150e2e; --surf2:#1c1140;
+    --ink:#f2efff; --dim:#a49cd0; --dim2:#7e76a8;
     --line:#2e2450; --info:#22e0ff; --gold:#f5c842; --rot:#ff2d95; --ok:#5df0c8;
+    --panel:#05030d; --cell:#150e2e; --cell2:#03020a;
+    --rule:rgba(242,239,255,.1); --peer:rgba(242,239,255,.05);
+    --okw:rgba(93,240,200,.17); --okwS:rgba(93,240,200,.3);
+    --goldw:rgba(245,200,66,.17); --goldwS:rgba(245,200,66,.3);
+    --rotw:rgba(255,45,149,.19); --rotwS:rgba(255,45,149,.32);
+    --btn:rgba(34,224,255,.16); --glow:rgba(34,224,255,.14);
+    --scrim:rgba(10,7,22,.91); --sheet:#150e2e; --shadow:rgba(0,0,0,.66);
   }
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%}
   body{
-    background:radial-gradient(120% 80% at 50% 0%,#1c1140 0%,var(--bg) 62%);
+    background:radial-gradient(120% 80% at 50% 0%,var(--surf2) 0%,var(--bg) 62%);
     color:var(--ink); font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;
     display:flex; align-items:flex-start; justify-content:center; gap:22px; padding:16px;
     -webkit-font-smoothing:antialiased; user-select:none;
@@ -20,51 +33,51 @@
   #board{position:relative}
 
   /* the whole shaft: junk zone on top, the KenKen at the bottom */
-  #shaft{display:grid; background:#0b0819; border:3px solid var(--info);
-    border-bottom:none; border-radius:5px 5px 0 0; box-shadow:0 0 30px #22e0ff22}
+  #shaft{display:grid; background:var(--cell2); border:3px solid var(--info);
+    border-bottom:none; border-radius:5px 5px 0 0; box-shadow:0 0 30px var(--glow)}
   .s{width:52px; height:52px; position:relative; display:flex;
      align-items:center; justify-content:center;
-     border-right:1px solid #ffffff08; border-bottom:1px solid #ffffff08}
-  .s.junk{background:#43213a; box-shadow:inset 0 0 0 1px #ff2d9555}
+     border-right:1px solid var(--rule); border-bottom:1px solid var(--rule)}
+  .s.junk{background:var(--rotwS); box-shadow:inset 0 0 0 1px var(--rot)}
   .s.junk::after{content:"";position:absolute;inset:5px;border-radius:2px;
-    background:repeating-linear-gradient(45deg,#ff2d9544 0 4px,transparent 4px 8px)}
+    background:repeating-linear-gradient(45deg,var(--rotw) 0 4px,transparent 4px 8px)}
   .s.junk.new{animation:thud .3s ease-out both}
   @keyframes thud{0%{transform:translateY(-14px);opacity:.2}100%{transform:none;opacity:1}}
-  .s.fallnum b{font-size:23px;font-weight:900;color:var(--gold);text-shadow:0 0 14px #f5c84288}
-  .s.col{background:#ffffff07}
-  .s.colblocked{background:#ff2d9510}
+  .s.fallnum b{font-size:23px;font-weight:900;color:var(--gold);text-shadow:0 0 14px var(--goldwS)}
+  .s.col{background:var(--peer)}
+  .s.colblocked{background:var(--rotw)}
 
   /* the KenKen itself */
-  #grid{display:grid; background:#0d0920; border:3px solid var(--ink);
-    border-radius:0 0 3px 3px; box-shadow:0 0 34px #22e0ff22}
+  #grid{display:grid; background:var(--panel); border:3px solid var(--ink);
+    border-radius:0 0 3px 3px; box-shadow:0 0 34px var(--glow)}
   .c{position:relative; width:52px; height:52px; display:flex;
      align-items:center; justify-content:center;
-     border-right:1px solid #ffffff1a; border-bottom:1px solid #ffffff1a}
+     border-right:1px solid var(--rule); border-bottom:1px solid var(--rule)}
   .c.wr{border-right:3px solid var(--ink)}
   .c.wb{border-bottom:3px solid var(--ink)}
   .c .cl{position:absolute; top:2px; left:4px; font-size:11px; font-weight:900; color:var(--gold)}
   .c b{font-size:26px; font-weight:800; color:var(--ink)}
-  .c.filled{background:#171b3a}
+  .c.filled{background:var(--cell)}
   .c.filled b{color:var(--ink)}
-  .c.scar{background:#3a1226; box-shadow:inset 0 0 0 2px #ff2d9566}
+  .c.scar{background:var(--rotwS); box-shadow:inset 0 0 0 2px var(--rot)}
   .c.scar b{color:var(--rot)}
   .c.scar::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:repeating-linear-gradient(45deg,#ff2d9526 0 5px,transparent 5px 10px)}
-  .c.sealed{background:#0f2a22}
+    background:repeating-linear-gradient(45deg,var(--rotw) 0 5px,transparent 5px 10px)}
+  .c.sealed{background:var(--okw)}
   .c.sealed b{color:var(--ok)}
-  .c.rowdone{background:#123027}
-  .c.aim{background:#0d3328; box-shadow:inset 0 0 0 2px var(--ok)}
-  .c.aimbad{background:#33101f; box-shadow:inset 0 0 0 2px var(--rot)}
-  .c.aimblind{box-shadow:inset 0 0 0 2px #f5c84288}
-  .c.fallcell{background:#3d3208; box-shadow:inset 0 0 0 2px var(--gold)}
+  .c.rowdone{background:var(--okwS)}
+  .c.aim{background:var(--okw); box-shadow:inset 0 0 0 2px var(--ok)}
+  .c.aimbad{background:var(--rotw); box-shadow:inset 0 0 0 2px var(--rot)}
+  .c.aimblind{box-shadow:inset 0 0 0 2px var(--gold)}
+  .c.fallcell{background:var(--goldwS); box-shadow:inset 0 0 0 2px var(--gold)}
   .c.land b{animation:pop .4s ease-out both}
   @keyframes pop{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1)}}
   .c.zap{animation:zap .5s ease-out both}
-  @keyframes zap{0%{background:#5df0c8;box-shadow:0 0 26px #5df0c8}100%{background:#0f2a22}}
+  @keyframes zap{0%{background:var(--ok);box-shadow:0 0 26px var(--ok)}100%{background:var(--okw)}}
 
   #flash{position:absolute; left:50%; top:34%; transform:translateX(-50%);
     font-size:25px; font-weight:900; letter-spacing:3px; color:var(--ok);
-    text-shadow:0 0 22px #5df0c8; pointer-events:none; opacity:0; white-space:nowrap; z-index:5}
+    text-shadow:0 0 22px var(--ok); pointer-events:none; opacity:0; white-space:nowrap; z-index:5}
   #flash.go{animation:fl 1.1s ease-out both}
   @keyframes fl{0%{opacity:0;transform:translateX(-50%) scale(.7)}
     18%{opacity:1;transform:translateX(-50%) scale(1.08)}72%{opacity:1}100%{opacity:0}}
@@ -77,7 +90,7 @@
   .side{width:216px}
   h1{font-size:17px; letter-spacing:6px; margin:0; color:var(--gold); font-weight:900}
   .tag{font-size:10px; letter-spacing:1.6px; color:var(--dim2); margin:3px 0 13px; line-height:1.5}
-  .box{background:#150e2e; border:1px solid var(--line); border-radius:8px;
+  .box{background:var(--cell); border:1px solid var(--line); border-radius:8px;
     padding:11px 13px; margin-bottom:9px}
   .lab{font-size:9px; letter-spacing:2.4px; color:var(--dim2); margin-bottom:7px}
   .big{font-size:26px; font-weight:900; color:var(--gold); line-height:1}
@@ -85,70 +98,39 @@
   .k{font-size:9px; letter-spacing:1.6px; color:var(--dim2)}
   .v{font-size:14px; font-weight:800}
   .q{display:flex; gap:5px}
-  .qn{width:25px;height:25px;border-radius:5px;background:#241c40;
+  .qn{width:25px;height:25px;border-radius:5px;background:var(--cell2);
     display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--dim)}
-  kbd{background:#241c40;border:1px solid var(--line);border-radius:3px;
+  kbd{background:var(--cell2);border:1px solid var(--line);border-radius:3px;
     padding:1px 6px; font-size:11px; color:var(--ink); font-weight:700}
   .keys{font-size:11px; color:var(--dim); line-height:1.95}
   button{font-family:inherit;font-weight:800;letter-spacing:1.6px;font-size:11px;
     padding:11px;border-radius:6px;cursor:pointer;width:100%;
-    border:1px solid var(--gold);background:#241c07;color:var(--gold)}
+    border:1px solid var(--gold);background:var(--goldw);color:var(--gold)}
   button.ghost{border-color:var(--line);background:transparent;color:var(--dim)}
 
-  #teach{position:fixed; inset:0; background:#080612e8; backdrop-filter:blur(7px);
+  #teach{position:fixed; inset:0; background:var(--scrim); backdrop-filter:blur(7px);
     display:flex; align-items:center; justify-content:center; z-index:50; padding:18px}
   #teach.off{display:none}
-  .card{width:100%; max-width:600px; background:#150f2e; border:1px solid var(--gold);
-    border-radius:12px; padding:22px 24px; box-shadow:0 20px 60px #000a}
+  .card{width:100%; max-width:600px; background:var(--sheet); border:1px solid var(--gold);
+    border-radius:12px; padding:22px 24px; box-shadow:0 20px 60px var(--shadow)}
   .card h2{margin:0 0 3px; font-size:15px; letter-spacing:3px; color:var(--gold)}
   .card .step{font-size:9px;letter-spacing:2px;color:var(--dim2);margin-bottom:14px}
   .card p{font-size:14px; line-height:1.6; margin:0 0 11px}
   .card p.small{font-size:12.5px; color:var(--dim)}
   .demo{display:flex;align-items:center;justify-content:center;gap:14px;margin:15px 0 16px;flex-wrap:wrap}
-  .dg{display:grid;border:2px solid var(--ink);border-radius:3px;background:#0d0920}
+  .dg{display:grid;border:2px solid var(--ink);border-radius:3px;background:var(--panel)}
   .dc{width:42px;height:42px;display:flex;align-items:center;justify-content:center;
-    border-right:1px solid #ffffff1a;border-bottom:1px solid #ffffff1a;
+    border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
     font-size:20px;font-weight:800;position:relative;color:var(--ink)}
   .dc .cl{position:absolute;top:1px;left:3px;font-size:9px;font-weight:900;color:var(--gold)}
   .dc.wr{border-right:3px solid var(--ink)} .dc.wb{border-bottom:3px solid var(--ink)}
-  .dc.ok{background:#0f2a22;color:var(--ok)}
-  .dc.jk{background:#43213a;color:var(--rot)}
+  .dc.ok{background:var(--okw);color:var(--ok)}
+  .dc.jk{background:var(--rotwS);color:var(--rot)}
   .arrow{font-size:13px;color:var(--dim2);font-weight:800}
   .cardbtns{display:flex;gap:8px;margin-top:4px}
   .cardbtns button{width:auto;flex:1}
-
-  /* ---- ON PAPER. It carries its own stylesheet rather than the arcade's, so
-     the light skins have to be answered here too or a cabinet that reads fine
-     everywhere else turns into a black slab on cream. ---- */
-  .paper body{background:radial-gradient(120% 80% at 50% 0%, #ffffff 0%, var(--bg) 70%)}
-  .paper #shaft{background:#fffdf8}
-  .paper .s{border-right-color:#00000012;border-bottom-color:#00000012}
-  .paper .s.junk{background:#b0206022}
-  .paper .s.col{background:#00000008}
-  .paper #grid{background:#fffdf8;border-color:var(--ink)}
-  .paper .c{border-right-color:#00000018;border-bottom-color:#00000018}
-  .paper .c b{color:var(--ink)}
-  .paper .c.filled{background:#00000010}
-  .paper .c.sealed{background:#1a7a5e1a}
-  .paper .c.sealed b{color:var(--ok)}
-  .paper .c.scar{background:#b0206020}
-  .paper .c.scar b{color:var(--rot)}
-  .paper .c.fallcell{background:#a8761a26}
-  .paper .c.aim{background:#1a7a5e1f}
-  .paper .c.aimbad{background:#b0206020}
-  .paper .box{background:#00000008;border-color:#00000022}
-  .paper kbd{background:#00000010;border-color:#00000026;color:var(--ink)}
-  .paper button{background:#00000008}
-  .paper button.ghost{background:transparent}
-  .paper .card{background:#fffdf8}
-  .paper .dg{background:#fffdf8}
-  .paper .dc{color:var(--ink);border-right-color:#00000018;border-bottom-color:#00000018}
-  .paper .dc.g{background:#a8761a26}
-  .paper .dc.ok{background:#1a7a5e1f}
-  .paper .dc.jk{background:#b0206020}
-  .paper #teach{background:#f4efe2e8}
 </style>
-<script src="arcade/shell.js?v=317"></script>
+<script src="arcade/shell.js?v=524"></script>
 </head>
 <body>
 

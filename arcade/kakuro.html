@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE SUMS</title>
-<link rel="stylesheet" href="shell.css?v=317">
-<script src="shell.js?v=317"></script>
+<link rel="stylesheet" href="shell.css?v=524">
+<script src="shell.js?v=524"></script>
 <script>
 // draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
 function tg(rows){
@@ -41,38 +41,26 @@ var LESSON=[
 
 </script>
 <style>
-  #grid{display:grid;background:#0d0920;border:3px solid var(--info);border-radius:5px;
-    box-shadow:0 0 34px #22e0ff22}
+  #grid{display:grid;background:var(--panel);border:3px solid var(--info);border-radius:5px;
+    box-shadow:0 0 34px var(--glow)}
   .c{width:54px;height:54px;position:relative;display:flex;align-items:center;justify-content:center;
-    border-right:1px solid #ffffff12;border-bottom:1px solid #ffffff12;
+    border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
     font-size:21px;font-weight:800;color:var(--ok)}
-  .c.blk{background:#120c26;cursor:default}
-  .c.open{cursor:pointer;background:#171130}
-  .c.sel{background:#12303a;box-shadow:inset 0 0 0 2px var(--gold)}
+  .c.blk{background:var(--cell2);cursor:default}
+  .c.open{cursor:pointer;background:transparent}
+  .c.sel{background:var(--sel);box-shadow:inset 0 0 0 2px var(--gold)}
   .c.bad{color:var(--rot)}
-  .c.run{background:#1b1440}
-  .c.printed{color:var(--ink);background:#171130}
+  .c.run{background:var(--cage)}
+  .c.printed{color:var(--ink);background:var(--cell)}
   .slash{position:absolute;inset:0;pointer-events:none}
   .slash::after{content:"";position:absolute;left:0;top:0;width:100%;height:100%;
-    background:linear-gradient(to bottom right,transparent 49%,#ffffff26 49%,#ffffff26 51%,transparent 51%)}
+    background:linear-gradient(to bottom right,transparent 49%,var(--rule2) 49%,var(--rule2) 51%,transparent 51%)}
   .dn{position:absolute;left:4px;bottom:2px;font-size:11px;font-weight:900;color:var(--gold)}
   .ac{position:absolute;right:4px;top:2px;font-size:11px;font-weight:900;color:var(--info)}
   .pad{display:flex;gap:5px;margin-top:11px;flex-wrap:wrap;max-width:330px}
   .pad button{width:auto;flex:1 1 30px;padding:11px 0;font-size:15px;
-    border-color:var(--info);color:var(--info);background:#12233a}
+    border-color:var(--info);color:var(--info);background:var(--btn)}
   .pad button.era{flex:1 1 74px;font-size:10px;border-color:var(--line);color:var(--dim);background:transparent}
-
-  /* ---- ON PAPER ---- */
-  .paper #grid{background:#fffdf8}
-  .paper .c{border-right-color:#00000018;border-bottom-color:#00000018;color:var(--ok)}
-  .paper .c.blk{background:#00000026}
-  .paper .c.open{background:#fffdf8}
-  .paper .c.printed{background:#00000010;color:var(--ink)}
-  .paper .c.sel{background:#0e7fa826}
-  .paper .c.run{background:#6a4cb016}
-  .paper .slash::after{background:linear-gradient(to bottom right,transparent 49%,#00000044 49%,#00000044 51%,transparent 51%)}
-  .paper .pad button{background:#0e7fa814;border-color:var(--info);color:var(--info)}
-  .paper .pad button.era{background:transparent;border-color:#00000026;color:var(--dim)}
 </style>
 </head>
 <body>

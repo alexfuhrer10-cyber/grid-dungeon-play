@@ -6,47 +6,93 @@
 <meta name="robots" content="noindex" />
 <title>KENKEN MASTER CONTROL</title>
 <style>
-  :root { color-scheme: dark; }
+  /* ==========================================================================
+     MASTER CONTROL WEARS THE GAME'S SKINS (kkd-542).
+     Owner: "add themes to the master control admin backend too. i should be
+     able to make it look nice as well. use all the themes u have."
+
+     Every colour below is a variable. The values are written onto :root at load
+     from public/admin-skins.json, which is GENERATED from the game's own skin
+     definitions by tools/admin-skins.mjs — so this page cannot drift out of
+     step with the app the way a hand-copied palette would. The hard-coded
+     values here are The Vault and exist only so the page is never unstyled in
+     the moment before the JSON lands.
+
+     SEVEN OF THE TEN SKINS ARE PRINTED ON PAPER, which is the whole reason this
+     is tokenised rather than themed by hand: a light skin needs dark type on a
+     filled chip and a dark skin needs the opposite, and every place that
+     mattered in the game got that wrong at least once. --fill-ink carries it.
+     ========================================================================== */
+  :root {
+    --rootBg: #141024; --bg: #0b0e1a; --surf: #121732; --surf2: #16324a;
+    --line: #2a3260; --line2: #2a326055;
+    --text: #dfe6ff; --text2: #b7aee6; --text3: #7c86ad; --dim: #9389c4;
+    --info: #7df3ff; --infoSoft: #7dd7ff; --ok: #8ef3b0; --reward: #fbbf24;
+    --bad: #ff7a90; --warn: #ff9d5c;
+    --fill-ink: #0a0410;
+    --face: -apple-system, "Segoe UI", Roboto, sans-serif;
+    --display: -apple-system, "Segoe UI", Roboto, sans-serif;
+    --track: 1;
+    color-scheme: dark;
+  }
+  :root[data-paper="1"] { color-scheme: light; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: #0b0e1a; color: #dfe6ff; font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { margin: 0; background: var(--rootBg); color: var(--text); font: 14px/1.5 var(--face); transition: background .18s, color .18s; }
   .wrap { max-width: 860px; margin: 0 auto; padding: 20px 14px 80px; }
-  h1 { font-size: 16px; letter-spacing: 3px; color: #7df3ff; margin: 0 0 2px; }
-  .sub { color: #7c86ad; font-size: 12px; margin: 0 0 14px; }
+  h1 { font-size: 16px; letter-spacing: calc(3px * var(--track)); color: var(--info); margin: 0 0 2px; font-family: var(--display); }
+  .sub { color: var(--text3); font-size: 12px; margin: 0 0 14px; }
   .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-  .tabs button { margin: 0; padding: 8px 13px; border-radius: 999px; background: #121732; border: 1px solid #2a3260; color: #7c86ad; font-size: 11px; letter-spacing: 1.5px; font-weight: 700; cursor: pointer; }
-  .tabs button.on { color: #7df3ff; border-color: #7df3ff88; background: #16324a; }
-  .card { background: #121732; border: 1px solid #2a3260; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
-  .card h2 { font-size: 12px; letter-spacing: 2px; color: #fbbf24; margin: 0 0 10px; }
-  label { display: block; font-size: 11px; letter-spacing: 1px; color: #7c86ad; margin: 8px 0 3px; }
-  input, textarea, select { width: 100%; background: #0b0e1a; border: 1px solid #2a3260; border-radius: 7px; color: #dfe6ff; padding: 9px 10px; font: inherit; }
+  .tabs button { margin: 0; padding: 8px 13px; border-radius: 999px; background: var(--surf); border: 1px solid var(--line); color: var(--text3); font-size: 11px; letter-spacing: calc(1.5px * var(--track)); font-weight: 700; cursor: pointer; font-family: var(--display); }
+  .tabs button.on { color: var(--info); border-color: var(--info); background: var(--surf2); }
+  .card { background: var(--surf); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .card h2 { font-size: 12px; letter-spacing: calc(2px * var(--track)); color: var(--reward); margin: 0 0 10px; font-family: var(--display); }
+  label { display: block; font-size: 11px; letter-spacing: calc(1px * var(--track)); color: var(--text3); margin: 8px 0 3px; }
+  input, textarea, select { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 7px; color: var(--text); padding: 9px 10px; font: inherit; }
   textarea { min-height: 64px; resize: vertical; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
-  button { background: #16324a; border: 1px solid #7df3ff88; color: #7df3ff; border-radius: 7px; padding: 9px 14px; font: inherit; font-weight: 700; letter-spacing: 1px; cursor: pointer; margin-top: 10px; }
-  button.warn { border-color: #fbbf2488; color: #fbbf24; background: #33270e; }
-  button.bad { border-color: #ff7a9088; color: #ff7a90; background: #33131a; }
+  button { background: var(--surf2); border: 1px solid var(--info); color: var(--info); border-radius: 7px; padding: 9px 14px; font: inherit; font-weight: 700; letter-spacing: calc(1px * var(--track)); cursor: pointer; margin-top: 10px; font-family: var(--display); }
+  button.warn { border-color: var(--reward); color: var(--reward); background: transparent; }
+  button.bad { border-color: var(--bad); color: var(--bad); background: transparent; }
   button.mini { padding: 4px 10px; font-size: 11px; margin: 4px 6px 0 0; }
   .row { display: flex; gap: 8px; align-items: flex-end; }
   .row > * { flex: 1; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-  .stat { background: #0b0e1a; border: 1px solid #2a3260; border-radius: 8px; padding: 10px 12px; }
-  .stat b { display: block; font-size: 22px; color: #7df3ff; }
-  .stat span { font-size: 10px; letter-spacing: 1.5px; color: #7c86ad; }
-  .item { border-top: 1px solid #2a326055; padding: 9px 0; font-size: 13px; }
-  .item small { color: #7c86ad; display: block; }
-  .pill { display: inline-block; font-size: 10px; letter-spacing: 1px; border: 1px solid #2a3260; border-radius: 999px; padding: 1px 8px; color: #7c86ad; margin-left: 6px; }
-  .pill.ok { color: #8ef3b0; border-color: #8ef3b055; }
-  .pill.bad { color: #ff7a90; border-color: #ff7a9055; }
-  .msg { font-size: 12px; color: #8ef3b0; margin-top: 8px; white-space: pre-wrap; }
-  .err { color: #ff7a90; }
-  a { color: #7df3ff; }
+  .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 22px; color: var(--info); font-family: var(--display); }
+  .stat span { font-size: 10px; letter-spacing: calc(1.5px * var(--track)); color: var(--text3); }
+  .item { border-top: 1px solid var(--line2); padding: 9px 0; font-size: 13px; }
+  .item small { color: var(--text3); display: block; }
+  .pill { display: inline-block; font-size: 10px; letter-spacing: calc(1px * var(--track)); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; color: var(--text3); margin-left: 6px; }
+  .pill.ok { color: var(--ok); border-color: var(--ok); }
+  .pill.bad { color: var(--bad); border-color: var(--bad); }
+  .msg { font-size: 12px; color: var(--ok); margin-top: 8px; white-space: pre-wrap; }
+  .err { color: var(--bad); }
+  a { color: var(--info); }
   ol li { margin: 2px 0; }
-  code { background: #0b0e1a; border: 1px solid #2a3260; border-radius: 5px; padding: 1px 6px; font-size: 12px; overflow-wrap: anywhere; }
-  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #16324a; border: 1px solid #7df3ff88; color: #dfe6ff; border-radius: 999px; padding: 10px 18px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 90vw; }
+  code { background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-size: 12px; overflow-wrap: anywhere; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--surf2); border: 1px solid var(--info); color: var(--text); border-radius: 999px; padding: 10px 18px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 90vw; }
+
+  /* ---- the skin picker ---------------------------------------------------
+     Each swatch is PAINTED IN ITS OWN SKIN rather than labelled with it, so
+     the row is the preview. Anything else means clicking ten times to find out
+     what they look like. */
+  #skinbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 16px; }
+  #skinbar .lab { font-size: 10px; letter-spacing: calc(2px * var(--track)); color: var(--text3); font-family: var(--display); margin-right: 2px; }
+  .swatch { position: relative; width: 42px; height: 30px; border-radius: 7px; padding: 0; margin: 0; cursor: pointer;
+            border: 1px solid var(--line); overflow: hidden; flex-shrink: 0; }
+  .swatch[aria-pressed="true"] { border-color: var(--info); box-shadow: 0 0 0 2px var(--info); }
+  .swatch i { position: absolute; display: block; border-radius: 2px; }
+  .swatch i.a { left: 5px; top: 6px; width: 14px; height: 4px; }
+  .swatch i.b { left: 5px; top: 13px; width: 22px; height: 3px; opacity: .8; }
+  .swatch i.c { left: 5px; top: 19px; width: 9px; height: 3px; opacity: .7; }
+  .swatch i.d { right: 5px; top: 6px; width: 8px; height: 8px; border-radius: 999px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>KENKEN MASTER CONTROL</h1>
   <p class="sub">Internal team only. Every action is checked server-side (RLS); this page holds no secrets and grants nothing by itself.</p>
+
+  <div id="skinbar"><span class="lab">SKIN</span></div>
 
   <div class="card" id="who"><h2>WHO AM I</h2><div id="whoBody">Checking the session from the game…</div></div>
 
@@ -58,9 +104,84 @@
 <div id="toast"></div>
 
 <script>
+/* ===========================================================================
+   THE SKINS. Loaded from public/admin-skins.json, which tools/admin-skins.mjs
+   generates from the game's own skin definitions.
+
+   IT IS NEVER A DEPENDENCY. Every failure path leaves the page exactly as the
+   stylesheet left it, because an admin console that will not paint because a
+   decorative JSON 404'd is worse than an unthemed one. Same rule the Reveal
+   server merge follows.
+   =========================================================================== */
+const SKIN_KEY = "gd-admin-skin";
+let SKINS = [];
+
+function paintSkin(s) {
+  if (!s) return;
+  const r = document.documentElement.style;
+  const set = (k, v) => { if (v) r.setProperty("--" + k, v); };
+  set("rootBg", s.rootBg || s.bg);
+  set("bg", s.bgDeep || s.bg);
+  set("surf", s.surf);
+  set("surf2", s.surf2);
+  set("line", s.hairline2 || s.hairline || s.border);
+  set("line2", (s.hairline2 || s.hairline || s.border) + "88");
+  set("text", s.text); set("text2", s.text2); set("text3", s.text3); set("dim", s.dim);
+  set("info", s.infoBright || s.info); set("infoSoft", s.infoSoft);
+  set("ok", s.ok); set("reward", s.reward); set("bad", s.bad); set("warn", s.warn);
+  /* Type ON a filled chip. Seven of the ten skins are printed on paper and fill
+     with a DARK ink, so the near-black that reads on the dark skins is invisible
+     there. This is the same law as the game's fillInk. */
+  set("fill-ink", s.paper ? "#FFFFFF" : (s.accentInk || "#0a0410"));
+  set("face", s.face || "-apple-system, sans-serif");
+  set("display", s.display || s.face || "-apple-system, sans-serif");
+  set("track", String(s.trackMul == null ? 1 : s.trackMul));
+  document.documentElement.setAttribute("data-paper", s.paper ? "1" : "0");
+  try { localStorage.setItem(SKIN_KEY, s.id); } catch (e) { /* private mode */ }
+  const bar = document.getElementById("skinbar");
+  if (bar) [...bar.querySelectorAll(".swatch")].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.skin === s.id)));
+}
+
+function drawSkinBar() {
+  const bar = document.getElementById("skinbar");
+  if (!bar || !SKINS.length) return;
+  for (const s of SKINS) {
+    const b = document.createElement("button");
+    b.className = "swatch";
+    b.dataset.skin = s.id;
+    b.title = s.name + (s.paper ? " (paper)" : "");
+    b.setAttribute("aria-label", s.name);
+    b.setAttribute("aria-pressed", "false");
+    /* PAINTED IN ITS OWN SKIN. The swatch is the preview, not a label. */
+    b.style.background = s.surf || s.bg;
+    b.style.borderColor = (s.hairline2 || s.hairline || s.border);
+    b.innerHTML =
+      '<i class="a" style="background:' + (s.infoBright || s.info) + '"></i>' +
+      '<i class="b" style="background:' + (s.text3 || s.text2) + '"></i>' +
+      '<i class="c" style="background:' + (s.ok || s.info) + '"></i>' +
+      '<i class="d" style="background:' + (s.reward || s.accent) + '"></i>';
+    b.onclick = () => { paintSkin(s); toast(s.name); };
+    bar.appendChild(b);
+  }
+}
+
+(async function loadSkins() {
+  let want = null;
+  try { want = localStorage.getItem(SKIN_KEY); } catch (e) { /* ignore */ }
+  try {
+    const r = await fetch("admin-skins.json", { cache: "no-cache" });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j || !Array.isArray(j.skins) || !j.skins.length) return;
+    SKINS = j.skins;
+    drawSkinBar();
+    paintSkin(SKINS.find((s) => s.id === want) || SKINS.find((s) => s.id === "vault") || SKINS[0]);
+  } catch (e) { /* the stylesheet already painted a usable page */ }
+})();
+
 const URL_BASE = "https://kwxloloxyovduapgormo.supabase.co";
 const ANON = "sb_publishable_gWiColAMblYHGAcQJOx-Aw_xOltTJnq";
-const TABS = [["overview","OVERVIEW"],["news","NEWS"],["doors","SIGN-IN"],["grants","GRANTS"],["players","PLAYERS"],["saves","SAVES"],["moderation","MODERATION"],["team","TEAM"]];
+const TABS = [["overview","OVERVIEW"],["signal","SIGNAL"],["news","NEWS"],["doors","SIGN-IN"],["grants","GRANTS"],["players","PLAYERS"],["saves","SAVES"],["moderation","MODERATION"],["team","TEAM"]];
 let TAB = "overview";
 
 function session() { try { return JSON.parse(localStorage.getItem("gd-auth") || "null"); } catch (e) { return null; } }
@@ -187,10 +308,44 @@ async function boot() {
     document.getElementById("tools").style.display = "";
     renderTabs(); show(TAB);
   } else if (probe.ok) {
+    // THE ADD-ME LINE, AND WHY IT IS PRINTED RATHER THAN HIDDEN.
+    //
+    // This was one button calling navigator.clipboard.writeText(...).then(...)
+    // with no .catch(). When the write rejected, and it does reject, the whole
+    // thing failed silently: no toast, no error, no line. The one person who
+    // most needs this button is by definition locked out of the console, so a
+    // silent failure here is a dead end with nothing to try next.
+    //
+    // Now the SQL is ON THE PAGE, selectable, always. The button is a
+    // convenience over the top of it and the copy chain follows THE SHARE LAW
+    // used everywhere else in this project: clipboard, then execCommand, then
+    // select the text so a human can do it themselves. Every branch says what
+    // happened.
     const insert = "insert into public.gd_admins (user_id, label) values ('" + (s.user_id || "?") + "', 'team');";
     who.innerHTML = '<span class="err">This browser\'s account is not on the team yet.</span>' +
-      '<div style="margin-top:8px;font-size:12px;color:#7c86ad">This account id: <code>' + esc(s.user_id || "?") + "</code></div>" +
-      "<button onclick=\"navigator.clipboard.writeText('" + insert + "').then(()=>toast('Copied. Paste it in the SQL editor and Run.'))\">COPY THE ADD-ME LINE</button>";
+      '<div style="margin-top:8px;font-size:12px;color:#7c86ad">Run this in Supabase, SQL editor, then reload this page.</div>' +
+      '<textarea id="addMeSql" readonly rows="3" style="width:100%;box-sizing:border-box;margin-top:7px;padding:9px;border-radius:8px;' +
+        'background:#0d1224;border:1px solid #26304d;color:#cdd6f4;font:12px ui-monospace,monospace;resize:vertical">' +
+        esc(insert) + "</textarea>" +
+      '<button id="addMeCopy" style="margin-top:7px">COPY THE ADD-ME LINE</button>';
+    const btn = document.getElementById("addMeCopy");
+    const box = document.getElementById("addMeSql");
+    if (btn) btn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(insert);
+        toast("Copied. Paste it in the SQL editor and Run.");
+        return;
+      } catch (e) { /* fall through, never silently */ }
+      try {
+        box.focus(); box.select();
+        if (document.execCommand && document.execCommand("copy")) {
+          toast("Copied. Paste it in the SQL editor and Run.");
+          return;
+        }
+      } catch (e) { /* fall through */ }
+      box.focus(); box.select();
+      toast("Could not copy for you. The line is selected: press Cmd+C.", true);
+    };
   } else {
     who.innerHTML = '<span class="err">Could not check (' + probe.status + "). Reload the game once, then reload this page.</span>";
   }
@@ -264,6 +419,113 @@ async function paneOverview() {
   for (const a of (ans.data || [])) html += '<div class="item">' + esc(a.challenger) + (a.won ? " took" : " lost") + " a challenge — " + a.secs + "s<small>" + esc((a.created_at || "").slice(0, 16).replace("T", " ")) + "</small></div>";
   document.getElementById("activity").innerHTML = html || '<div class="item">Quiet so far.</div>';
   function stat(v, l) { return '<div class="stat"><b>' + esc(v) + "</b><span>" + l + "</span></div>"; }
+}
+
+// Declared ABOVE the function that reads it. It would have survived here as a
+// hoisted `let` because the pane only runs after the module evaluates, but this
+// file has been bitten by exactly that shape before and the safe order costs
+// nothing.
+let SIGNAL_DAYS = 30;
+// ---------- SIGNAL: what the game has actually been telling us ----------
+//
+// gd_events has been collecting since kkd-367 and nothing has ever read it
+// outside the Supabase SQL editor, which in practice meant nobody read it.
+// This pane is the whole point of having built the drain.
+//
+// It reads through the gd_ev_* RPCs, never the table. Those return AGGREGATES
+// ONLY and check gd_is_admin() inside the function body, so there is no route
+// here to an individual player's event history and no select policy on a table
+// of everyone's raw stream.
+//
+// If the RPCs are missing the pane says so plainly and names the file to run,
+// because a console that renders an empty chart when the cause is an unpasted
+// migration teaches you the wrong thing about your game.
+async function paneSignal() {
+  const host = document.getElementById("paneHost");
+  const days = SIGNAL_DAYS;
+  host.innerHTML =
+    '<div class="card"><h2>SIGNAL <span style="font-weight:400;color:#7c86ad;font-size:12px">last ' + days + ' days</span>' +
+      '<span style="float:right">' + [7, 30, 90].map((d) =>
+        '<button class="btn' + (d === days ? "" : " ghost") + '" data-days="' + d + '" style="margin-left:6px">' + d + 'd</button>').join("") + '</span></h2>' +
+      '<div id="sigPulse">Reading…</div></div>' +
+    '<div class="card"><h2>WHERE THE CAMPAIGN STOPS PEOPLE</h2><div id="sigFloors">Reading…</div>' +
+      '<div style="margin-top:9px;font-size:11px;color:#7c86ad">Of everyone who reached a floor, the share who went no further. The first tall bar is where the difficulty model is wrong.</div></div>' +
+    '<div class="card"><h2>KENKEN REVEAL, END TO END</h2><div id="sigReveal">Reading…</div>' +
+      '<div style="margin-top:9px;font-size:11px;color:#7c86ad">Run this before pricing the collection layer. A drop between TOOK A BOARD and REVEALED means the boards are too hard; a drop between OPENED and TOOK means the album is not selling the next picture.</div></div>' +
+    '<div class="card"><h2>DOES ANYONE COME BACK</h2><div id="sigReturn">Reading…</div></div>' +
+    '<div class="card"><h2>EVERY EVENT THAT FIRED</h2><div id="sigNames">Reading…</div>' +
+      '<div style="margin-top:9px;font-size:11px;color:#7c86ad">Fifty names are tracked. Anything sitting at zero next to its neighbours is something built that reaches nobody.</div></div>';
+
+  host.querySelectorAll("button[data-days]").forEach((b) =>
+    b.onclick = () => { SIGNAL_DAYS = Number(b.dataset.days); paneSignal(); });
+
+  const ev = async (fn) => {
+    const r = await api("/rest/v1/rpc/" + fn, { method: "POST", body: JSON.stringify({ days }) });
+    return r.ok && Array.isArray(r.data) ? r.data : (r.ok ? [] : null);
+  };
+  const missing = '<div style="color:#e0b341;font-size:12px;line-height:1.6">' +
+    'The read functions are not in the database yet.<br>Supabase → SQL editor → paste <b>supabase/DEPLOY/13-analytics-rpcs.sql</b> → Run.<br>' +
+    'The events themselves are already arriving; only this pane is waiting.</div>';
+  // A bar that is honest at zero: an empty track still draws, so "nothing here"
+  // and "nothing loaded" never look the same.
+  const bar = (frac, tone) => '<span style="display:block;height:6px;border-radius:3px;background:#1b2138;overflow:hidden">' +
+    '<span style="display:block;height:100%;width:' + Math.max(0, Math.min(100, frac * 100)).toFixed(1) + '%;background:' + (tone || "#4d8df6") + '"></span></span>';
+  const rows = (list, cells) => '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    list.map((r) => '<tr>' + cells(r).map((c) => '<td style="padding:5px 6px;border-top:1px solid #1b2138;vertical-align:middle">' + c + "</td>").join("") + "</tr>").join("") + "</table>";
+
+  const pulse = await ev("gd_ev_pulse");
+  const P = document.getElementById("sigPulse");
+  if (!pulse) P.innerHTML = missing;
+  else if (!pulse.length) P.innerHTML = '<div style="font-size:12px;color:#7c86ad">Nothing in the last ' + days + ' days. The table exists and accepts writes, so this means no one has played, not that anything is broken.</div>';
+  else {
+    const top = Math.max(...pulse.map((d) => Number(d.events) || 0), 1);
+    const tot = pulse.reduce((n, d) => n + Number(d.events || 0), 0);
+    const inst = Math.max(...pulse.map((d) => Number(d.installs) || 0), 0);
+    P.innerHTML = '<div class="grid" style="margin-bottom:10px">' +
+      '<div class="stat"><b>' + tot.toLocaleString() + "</b><span>EVENTS</span></div>" +
+      '<div class="stat"><b>' + inst.toLocaleString() + "</b><span>BUSIEST DAY, INSTALLS</span></div>" +
+      '<div class="stat"><b>' + pulse.length + "</b><span>DAYS WITH ANY ACTIVITY</span></div></div>" +
+      rows(pulse.slice(0, 14), (d) => [esc(String(d.day).slice(0, 10)), bar((Number(d.events) || 0) / top),
+        '<span style="color:#7c86ad">' + Number(d.events).toLocaleString() + "</span>"]);
+  }
+
+  const floors = await ev("gd_ev_floors");
+  const F = document.getElementById("sigFloors");
+  if (!floors) F.innerHTML = missing;
+  else if (!floors.length) F.innerHTML = '<div style="font-size:12px;color:#7c86ad">No finished runs yet in this window.</div>';
+  else F.innerHTML = rows(floors, (r) => [
+    '<b>FLOOR ' + esc(r.floor) + "</b>",
+    bar((Number(r.drop_pct) || 0) / 100, Number(r.drop_pct) >= 25 ? "#e05a5a" : "#4d8df6"),
+    '<span style="color:#7c86ad">' + (r.drop_pct == null ? "-" : r.drop_pct + "%") + "</span>",
+    '<span style="color:#7c86ad">' + esc(r.died_here) + " of " + esc(r.reached) + "</span>"]);
+
+  const rev = await ev("gd_ev_reveal");
+  const R = document.getElementById("sigReveal");
+  if (!rev) R.innerHTML = missing;
+  else {
+    const top = Math.max(...rev.map((r) => Number(r.installs) || 0), 1);
+    R.innerHTML = rows(rev, (r) => ['<b>' + esc(r.step) + "</b>", bar((Number(r.installs) || 0) / top, "#7d5cf0"),
+      '<span style="color:#7c86ad">' + Number(r.installs || 0).toLocaleString() + "</span>"]);
+  }
+
+  const ret = await ev("gd_ev_return");
+  const T = document.getElementById("sigReturn");
+  if (!ret) T.innerHTML = missing;
+  else {
+    const top = Math.max(...ret.map((r) => Number(r.installs) || 0), 1);
+    T.innerHTML = rows(ret, (r) => ['<b>' + esc(r.bucket) + "</b>", bar((Number(r.installs) || 0) / top, "#3fa87a"),
+      '<span style="color:#7c86ad">' + Number(r.installs || 0).toLocaleString() + "</span>"]);
+  }
+
+  const names = await ev("gd_ev_names");
+  const N = document.getElementById("sigNames");
+  if (!names) N.innerHTML = missing;
+  else if (!names.length) N.innerHTML = '<div style="font-size:12px;color:#7c86ad">Nothing yet.</div>';
+  else {
+    const top = Math.max(...names.map((r) => Number(r.events) || 0), 1);
+    N.innerHTML = rows(names, (r) => ['<b>' + esc(r.e) + "</b>", bar((Number(r.events) || 0) / top, "#7c86ad"),
+      '<span style="color:#7c86ad">' + Number(r.events).toLocaleString() + " · " + Number(r.installs).toLocaleString() + " inst</span>"]);
+  }
 }
 
 // ---------- NEWS ----------
@@ -683,7 +945,7 @@ async function refreshDoors() {
   });
 }
 
-const PANES = { overview: paneOverview, news: paneNews, doors: paneDoors, grants: paneGrants, players: panePlayers, saves: paneSaves, moderation: paneModeration, team: paneTeam };
+const PANES = { overview: paneOverview, signal: paneSignal, news: paneNews, doors: paneDoors, grants: paneGrants, players: panePlayers, saves: paneSaves, moderation: paneModeration, team: paneTeam };
 boot();
 </script>
 </body>

@@ -1,15 +1,32 @@
 /* Shared skin for the arcade cabinet. Every game in here is a self-contained
-   file rendered in an iframe, so they cannot share the app's theme system.
-   This is the smallest thing that keeps them looking like one arcade. */
+   file rendered in an iframe, so they cannot reach the app's theme system.
+
+   THE SKIN ARRIVES ON THE QUERY STRING and shell.js paints it on, including a
+   layer of SEMANTIC surfaces — --panel, --cell, --sel, --rule and the rest —
+   derived from that skin. Everything below is written in those, so there is
+   exactly one palette in this folder and it is the one the player chose.
+
+   The values here are only the fallback for a file opened directly, outside the
+   app, with nothing on the query string. */
 :root{
-  --bg:#0a0716; --ink:#f2efff; --dim:#a49cd0; --dim2:#7e76a8;
-  --line:#2e2450; --info:#22e0ff; --gold:#f5c842; --rot:#ff2d95; --ok:#5df0c8;
-  --myst:#a78bfa;
+  /* what the app sends */
+  --bg:#0a0716; --bgDeep:#05030d; --surf:#150e2e; --surf2:#1d1440;
+  --ink:#f2efff; --dim:#a49cd0; --dim2:#7e76a8; --line:#2e2450; --edge:#3b2f66;
+  --info:#22e0ff; --gold:#f5c842; --rot:#ff2d95; --ok:#5df0c8; --myst:#a78bfa;
+  --accentInk:#0a0410;
+  /* what shell.js works out from it */
+  --panel:#05030d; --cell:#150e2e; --cell2:#03020a;
+  --rule:rgba(242,239,255,.1); --rule2:rgba(242,239,255,.26);
+  --sel:rgba(34,224,255,.26); --same:rgba(34,224,255,.14); --peer:rgba(242,239,255,.05);
+  --cage:rgba(167,139,250,.17);
+  --okw:rgba(93,240,200,.17); --goldw:rgba(245,200,66,.17); --rotw:rgba(255,45,149,.19);
+  --btn:rgba(34,224,255,.16); --glow:rgba(34,224,255,.14);
+  --scrim:rgba(10,7,22,.91); --sheet:#150e2e;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{
-  background:radial-gradient(120% 80% at 50% 0%,#1c1140 0%,var(--bg) 62%);
+  background:radial-gradient(120% 80% at 50% 0%,var(--surf2) 0%,var(--bg) 62%);
   color:var(--ink); font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased; user-select:none;
   display:flex; align-items:flex-start; justify-content:center; gap:20px; padding:18px;
@@ -17,29 +34,17 @@ body{
 h1{font-size:16px; letter-spacing:6px; margin:0; color:var(--gold); font-weight:900}
 .tag{font-size:10px; letter-spacing:1.6px; color:var(--dim2); margin:3px 0 14px; line-height:1.5}
 .side{width:206px}
-.box{background:#150e2e; border:1px solid var(--line); border-radius:8px; padding:11px 13px; margin-bottom:10px}
+.box{background:var(--cell); border:1px solid var(--line); border-radius:8px; padding:11px 13px; margin-bottom:10px}
 .lab{font-size:9px; letter-spacing:2.4px; color:var(--dim2); margin-bottom:6px}
 .big{font-size:26px; font-weight:900; color:var(--gold); line-height:1}
 .r{display:flex; justify-content:space-between; align-items:baseline; margin-top:6px}
 .k{font-size:9px; letter-spacing:1.6px; color:var(--dim2)}
 .v{font-size:14px; font-weight:800}
 .keys{font-size:11px; color:var(--dim); line-height:1.95}
-kbd{background:#241c40;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:11px;color:var(--ink);font-weight:700}
+kbd{background:var(--cell2);border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:11px;color:var(--ink);font-weight:700}
 button{font-family:inherit;font-weight:800;letter-spacing:1.6px;font-size:11px;
   padding:11px;border-radius:6px;cursor:pointer;width:100%;
-  border:1px solid var(--gold);background:#241c07;color:var(--gold)}
+  border:1px solid var(--gold);background:var(--goldw);color:var(--gold)}
 button.ghost{border-color:var(--line);background:transparent;color:var(--dim)}
 #say{margin-top:9px;font-size:12.5px;font-weight:700;color:var(--ok);min-height:32px;text-align:center;line-height:1.4}
 #say.no{color:var(--rot)}
-
-/* ---- LIGHT PAPER. Three of the app's eight skins are light, and every panel
-   and cell in here is drawn with a near-black wash that simply disappears on
-   cream. `paper` flips those to ink-on-paper so a cabinet is readable on the
-   skin the player actually chose. ---- */
-.paper body{background:radial-gradient(120% 80% at 50% 0%, #ffffff 0%, var(--bg) 70%)}
-.paper .box{background:#00000008; border-color:#00000022}
-.paper kbd{background:#00000010; border-color:#00000026; color:var(--ink)}
-.paper button{background:#00000008}
-.paper button.ghost{background:transparent}
-.paper .lab,.paper .k{color:#00000077}
-.paper .keys{color:#000000aa}

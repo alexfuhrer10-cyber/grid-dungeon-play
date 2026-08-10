@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE THREAD</title>
-<link rel="stylesheet" href="shell.css?v=317">
-<script src="shell.js?v=317"></script>
+<link rel="stylesheet" href="shell.css?v=524">
+<script src="shell.js?v=524"></script>
 <script>
 // draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
 function tg(rows){
@@ -41,26 +41,18 @@ var LESSON=[
 
 </script>
 <style>
-  #grid{display:grid;background:#0d0920;border:3px solid var(--info);border-radius:6px;
-    box-shadow:0 0 34px #22e0ff22}
+  #grid{display:grid;background:var(--panel);border:3px solid var(--info);border-radius:6px;
+    box-shadow:0 0 34px var(--glow)}
   .c{width:56px;height:56px;display:flex;align-items:center;justify-content:center;
-    border-right:1px solid #ffffff12;border-bottom:1px solid #ffffff12;
+    border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
     font-size:20px;font-weight:800;cursor:pointer;position:relative}
-  .c.given{background:#1a2340;color:var(--info)}
-  .c.mine{background:#132b24;color:var(--ok)}
+  .c.given{background:var(--cell);color:var(--info)}
+  .c.mine{background:var(--okw);color:var(--ok)}
   .c.sel{box-shadow:inset 0 0 0 2px var(--gold)}
-  .c.hint{background:#241c07}
-  .c.wrong{background:#3a1226;color:var(--rot)}
+  .c.hint{background:var(--goldw)}
+  .c.wrong{background:var(--rotw);color:var(--rot)}
   .pad{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;max-width:290px}
   .pad button{width:auto;flex:0 0 auto;min-width:40px;padding:9px 0;font-size:13px}
-
-  /* ---- ON PAPER ---- */
-  .paper #grid{background:#fffdf8}
-  .paper .c{border-right-color:#00000018;border-bottom-color:#00000018;color:var(--ink)}
-  .paper .c.given{background:#0e7fa81f;color:var(--info)}
-  .paper .c.mine{background:#1a7a5e1f;color:var(--ok)}
-  .paper .c.hint{background:#a8761a1f}
-  .paper .c.wrong{background:#b0206026;color:var(--rot)}
 </style>
 </head>
 <body>

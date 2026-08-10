@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE KILLER</title>
-<link rel="stylesheet" href="shell.css?v=317">
-<script src="shell.js?v=317"></script>
+<link rel="stylesheet" href="shell.css?v=524">
+<script src="shell.js?v=524"></script>
 <style>
-  #grid{display:grid;grid-template-columns:repeat(9,44px);background:#0d0920;
-    border:3px solid var(--info);border-radius:5px;box-shadow:0 0 34px #22e0ff22}
+  #grid{display:grid;grid-template-columns:repeat(9,44px);background:var(--panel);
+    border:3px solid var(--info);border-radius:5px;box-shadow:0 0 34px var(--glow)}
   .c{width:44px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;
     font-size:20px;font-weight:800;cursor:pointer;color:var(--ok);
-    border-right:1px solid #ffffff10;border-bottom:1px solid #ffffff10}
-  .c.br{border-right:2px solid #ffffff40}
-  .c.bb{border-bottom:2px solid #ffffff40}
+    border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  .c.br{border-right:2px solid var(--rule2)}
+  .c.bb{border-bottom:2px solid var(--rule2)}
   /* the cage is a dotted inner outline, exactly as a Killer prints it */
   .c .cg{position:absolute;pointer-events:none}
   .c .cgt{top:3px;left:3px;right:3px;border-top:1px dashed var(--gold)}
@@ -21,26 +21,15 @@
   .c .cgl{left:3px;top:3px;bottom:3px;border-left:1px dashed var(--gold)}
   .c .cgr{right:3px;top:3px;bottom:3px;border-right:1px dashed var(--gold)}
   .c .sum{position:absolute;top:2px;left:5px;font-size:10px;font-weight:900;color:var(--gold);z-index:2}
-  .c.sel{background:#12303a;box-shadow:inset 0 0 0 2px var(--gold)}
-  .c.peer{background:#ffffff08}
-  .c.incage{background:#a78bfa1c}
-  .c.same{background:#1b2a44}
+  .c.sel{background:var(--sel);box-shadow:inset 0 0 0 2px var(--gold)}
+  .c.peer{background:var(--peer)}
+  .c.incage{background:var(--cage)}
+  .c.same{background:var(--same)}
   .nt{font-size:9px;font-weight:800;color:var(--myst);letter-spacing:1px;line-height:1}
   .pad{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px;width:396px}
   .pad button{width:auto;flex:1 1 36px;padding:12px 0;font-size:16px;
-    border-color:var(--info);color:var(--info);background:#12233a}
+    border-color:var(--info);color:var(--info);background:var(--btn)}
   .pad button.era{flex:1 1 80px;font-size:11px;border-color:var(--line);color:var(--dim);background:transparent}
-  /* ---- ON PAPER ---- */
-  .paper #grid{background:#fffdf8}
-  .paper .c{border-right-color:#00000018;border-bottom-color:#00000018;color:var(--ok)}
-  .paper .c.br{border-right-color:#00000055}
-  .paper .c.bb{border-bottom-color:#00000055}
-  .paper .c.sel{background:#0e7fa826}
-  .paper .c.peer{background:#00000009}
-  .paper .c.incage{background:#6a4cb016}
-  .paper .c.same{background:#0e7fa814}
-  .paper .pad button{background:#0e7fa814;border-color:var(--info);color:var(--info)}
-  .paper .pad button.era{background:transparent;border-color:#00000026;color:var(--dim)}
 </style>
 </head>
 <body>

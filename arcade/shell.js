@@ -15,24 +15,117 @@
 
 (function () {
   // ---- THE SKIN ------------------------------------------------------------
-  // The app has eight papers, three of them light, and the arcade was hardcoded
+  // The app has ten papers, seven of them light, and the arcade was hardcoded
   // dark: a player on the Notebook or Newsprint skin opened a cabinet and got a
   // black hole. Every colour comes in on the query string now, and anything not
   // sent keeps the dark default already in shell.css.
   var q = new URLSearchParams(location.search);
   var MAP = {
-    bg: "--bg", ink: "--ink", dim: "--dim", dim2: "--dim2", line: "--line",
+    bg: "--bg", bgDeep: "--bgDeep", surf: "--surf", surf2: "--surf2",
+    ink: "--ink", dim: "--dim", dim2: "--dim2", line: "--line", edge: "--edge",
     info: "--info", gold: "--gold", rot: "--rot", ok: "--ok", myst: "--myst",
+    accentInk: "--accentInk",
   };
   var root = document.documentElement;
+  var got = {};
   for (var k in MAP) {
     var v = q.get(k);
-    if (v && /^[#a-zA-Z0-9(),.% ]+$/.test(v)) root.style.setProperty(MAP[k], v);
+    if (v && /^[#a-zA-Z0-9(),.% ]+$/.test(v)) { root.style.setProperty(MAP[k], v); got[k] = v; }
   }
   // A LIGHT PAPER NEEDS MORE THAN NEW COLOURS. Panels and cells are drawn with
   // near-black washes that vanish on cream, so the page carries a class and the
   // stylesheet flips those to ink-on-paper.
-  if (q.get("paper") === "1") root.className += " paper";
+  var paper = q.get("paper") === "1";
+  if (paper) root.className += " paper";
+
+  // ---- ONE PALETTE PER PAPER, NOT TWO ----------------------------------------
+  //
+  // The colours above only ever reached the CHROME: the headings, the side
+  // panel, the buttons. Every BOARD in here was drawn with its own literal
+  // hexes, and there were exactly two sets of them — a midnight-indigo one and
+  // a cream one — repeated in all five games. So the app has ten papers and
+  // the cabinets had two. Somebody on the Legal Pad got a yellow game around a
+  // Vault-indigo Sudoku grid, and every dark skin got the same indigo whatever
+  // its own hue was.
+  //
+  // These are the SEMANTIC surfaces a puzzle board actually needs, worked out
+  // once, here, from the skin the player chose. A game now says `var(--sel)`
+  // and gets that skin's selection wash. Nothing downstream repeats a palette,
+  // and adding a twelfth paper needs no edit in this folder at all.
+  //
+  // Deliberately computed in JS rather than with color-mix(): this file is
+  // served to whatever browser the player has, and a board that silently loses
+  // its selection colour is worse than a few lines of arithmetic.
+  var hex = function (s) { return typeof s === "string" && /^#[0-9a-fA-F]{6}$/.test(s) ? s : null; };
+  var rgb = function (s) { var n = parseInt(s.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  var a = function (s, alpha) {                                   // a wash of a colour
+    var c = hex(s); if (!c) return "transparent";
+    var p = rgb(c); return "rgba(" + p[0] + "," + p[1] + "," + p[2] + "," + alpha + ")";
+  };
+  var mix = function (s, t, amt) {                                // one step toward another
+    var c = hex(s), d = hex(t); if (!c || !d) return c || d || "#000000";
+    var p = rgb(c), r = rgb(d), out = "#";
+    for (var i = 0; i < 3; i++) {
+      var v = Math.round(p[i] * (1 - amt) + r[i] * amt);
+      out += (v < 16 ? "0" : "") + v.toString(16);
+    }
+    return out;
+  };
+  var BG = hex(got.bg) || "#0a0716";
+  var DEEP = hex(got.bgDeep) || mix(BG, "#000000", 0.35);
+  var SURF = hex(got.surf) || mix(BG, "#ffffff", 0.08);
+  var INK = hex(got.ink) || "#f2efff";
+  var INFO = hex(got.info) || "#22e0ff";
+  var GOLD = hex(got.gold) || "#f5c842";
+  var ROT = hex(got.rot) || "#ff2d95";
+  var OK = hex(got.ok) || "#5df0c8";
+  var MYST = hex(got.myst) || "#a78bfa";
+  var SEM = {
+    // the board's own field, and the two cell states either side of it
+    "--panel": paper ? mix(SURF, "#ffffff", 0.55) : DEEP,
+    "--cell": paper ? a(INK, 0.07) : SURF,
+    "--cell2": paper ? a(INK, 0.16) : mix(DEEP, "#000000", 0.4),
+    // the rules between cells, and the heavier ones between boxes
+    "--rule": a(INK, paper ? 0.16 : 0.1),
+    "--rule2": a(INK, paper ? 0.4 : 0.34),
+    // what the board says about where you are
+    "--sel": a(INFO, paper ? 0.2 : 0.26),
+    "--same": a(INFO, paper ? 0.1 : 0.14),
+    "--peer": a(INK, paper ? 0.06 : 0.05),
+    "--cage": a(MYST, paper ? 0.12 : 0.17),
+    // the verdict washes, each its own token so a skin carries them, and each
+    // in two strengths: Cage Fall alone needs "this row is done" to sit next to
+    // "this square is sealed" and still be told apart.
+    "--okw": a(OK, paper ? 0.14 : 0.17),
+    "--okwS": a(OK, paper ? 0.26 : 0.3),
+    "--goldw": a(GOLD, paper ? 0.14 : 0.17),
+    "--goldwS": a(GOLD, paper ? 0.26 : 0.3),
+    "--rotw": a(ROT, paper ? 0.14 : 0.19),
+    "--rotwS": a(ROT, paper ? 0.26 : 0.32),
+    "--btn": a(INFO, paper ? 0.12 : 0.16),
+    // the light the board throws, and what covers it when a round ends
+    "--glow": a(INFO, paper ? 0.1 : 0.14),
+    "--scrim": a(BG, 0.91),
+    "--sheet": paper ? mix(SURF, "#ffffff", 0.5) : mix(BG, "#ffffff", 0.06),
+    "--shadow": "rgba(0,0,0," + (paper ? 0.2 : 0.66) + ")",
+  };
+  for (var s in SEM) root.style.setProperty(s, SEM[s]);
+
+  // A GAME THAT NEEDS A COLOUR RAMP CANNOT DO IT IN CSS. 2048 tints eleven tile
+  // values, and it carried two hardcoded eleven-step ladders to do it. The skin
+  // is handed over instead, so a ramp can be BUILT from whatever paper the
+  // player is on rather than picked from two.
+  var SKIN = {
+    paper: paper, bg: BG, deep: DEEP, surf: SURF, panel: SEM["--panel"],
+    ink: INK, info: INFO, gold: GOLD, rot: ROT, ok: OK, myst: MYST,
+    mix: mix, alpha: a,
+    // black or white on a given fill, whichever actually reads
+    inkOn: function (c) {
+      var p = rgb(hex(c) || "#000000");
+      var lum = (0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]) / 255;
+      return lum > 0.55 ? "#141014" : "#f6f3ff";
+    },
+  };
 
   // ---- REPORTING A RESULT BACK TO THE GAME ---------------------------------
   // A cabinet is an iframe, so it cannot touch the save. It posts what happened
@@ -43,6 +136,7 @@
   // tampered frame can only lie about WHAT it did, not about what it is owed.
   var CURRENT_LEVEL = "";      // set by the front page, read by every report
   window.ARCADE = {
+    skin: SKIN,
     setLevel: function (name) { CURRENT_LEVEL = name || ""; },
     report: function (what) {
       try {
@@ -70,12 +164,10 @@
     st.id = "arcShellCss";
     st.textContent = `/* ---- THE TUTORIAL CARD. One layout for every cabinet, so a player who has met
    one of these has met all of them. ---- */
-#teachWrap{position:fixed;inset:0;background:#080612e8;backdrop-filter:blur(7px);
+#teachWrap{position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(7px);
   display:flex;align-items:center;justify-content:center;z-index:60;padding:18px}
-.paper #teachWrap{background:#f4efe2ee}
-.tCard{width:100%;max-width:560px;background:#150f2e;border:1px solid var(--gold);
+.tCard{width:100%;max-width:560px;background:var(--sheet);border:1px solid var(--gold);
   border-radius:12px;padding:20px 22px;box-shadow:0 20px 60px #000a;max-height:92vh;overflow:auto}
-.paper .tCard{background:#fffdf8;box-shadow:0 20px 60px #0003}
 .tHead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 #tFace{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0}
 #tWho{font-size:13px;font-weight:900;letter-spacing:2.4px;color:var(--gold)}
@@ -85,18 +177,15 @@
 #tSay i{color:var(--rot);font-style:normal}
 #tBody{margin:0 0 14px}
 .tDemo{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:4px 0}
-.tG{display:grid;border:2px solid var(--ink);border-radius:3px;background:#0d0920}
-.paper .tG{background:#fffdf8}
+.tG{display:grid;border:2px solid var(--ink);border-radius:3px;background:var(--panel)}
 .tC{width:42px;height:42px;display:flex;align-items:center;justify-content:center;
-  border-right:1px solid #ffffff1a;border-bottom:1px solid #ffffff1a;
+  border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
   font-size:19px;font-weight:800;position:relative;color:var(--ink)}
-.paper .tC{border-right-color:#00000018;border-bottom-color:#00000018}
 .tC .cl{position:absolute;top:1px;left:3px;font-size:9px;font-weight:900;color:var(--gold)}
 .tC.wr{border-right:3px solid var(--ink)} .tC.wb{border-bottom:3px solid var(--ink)}
-.tC.ok{background:#1a7a5e2e;color:var(--ok)} .tC.no{background:#b0206030;color:var(--rot)}
-.tC.hl{background:#a8761a2e;color:var(--gold)}
-.tC.blk{background:#00000040}
-.paper .tC.blk{background:#00000026}
+.tC.ok{background:var(--okw);color:var(--ok)} .tC.no{background:var(--rotw);color:var(--rot)}
+.tC.hl{background:var(--goldw);color:var(--gold)}
+.tC.blk{background:var(--cell2)}
 .tNote{font-size:12px;color:var(--dim);line-height:1.55;margin:10px 0 0;text-align:center}
 .tBtns{display:flex;gap:8px}
 .tBtns button{width:auto;flex:1}
@@ -107,14 +196,12 @@ body{padding-top:56px}
 #arcBar{position:fixed;top:0;left:0;right:0;height:46px;z-index:70;
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:0 12px calc(0px) 12px;padding-top:env(safe-area-inset-top,0px);
-  background:#0a0716d9;backdrop-filter:blur(9px);border-bottom:1px solid var(--line)}
-.paper #arcBar{background:#fffdf8d9;border-bottom-color:#00000018}
+  background:var(--scrim);backdrop-filter:blur(9px);border-bottom:1px solid var(--line)}
 .abBtn{width:auto;padding:8px 13px;font-size:10px;letter-spacing:2px;
   border:1px solid var(--line);background:transparent;color:var(--dim)}
 .abBtn:hover{color:var(--ink);border-color:var(--dim2)}
-#setWrap{position:fixed;inset:0;background:#080612e8;backdrop-filter:blur(7px);
+#setWrap{position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(7px);
   display:none;align-items:center;justify-content:center;z-index:80;padding:18px}
-.paper #setWrap{background:#f4efe2ee}
 #setTitle{font-size:12px;font-weight:900;letter-spacing:3px;color:var(--gold);margin-bottom:14px}
 .setRow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;
   font-size:11px;letter-spacing:2px;color:var(--dim)}
@@ -123,14 +210,12 @@ body{padding-top:56px}
   border:1px solid var(--line);background:transparent;color:var(--dim2)}
 .seg button:first-child{border-radius:6px 0 0 6px}
 .seg button:last-child{border-radius:0 6px 6px 0;border-left:none}
-.seg button.on{background:var(--gold);color:#241c07;border-color:var(--gold)}
-.paper .seg button.on{color:#fff}
+.seg button.on{background:var(--gold);color:var(--accentInk);border-color:var(--gold)}
 .setNote{font-size:10.5px;line-height:1.55;color:var(--dim2);margin:2px 0 0}
 /* ---- THE CABINET'S OWN FRONT PAGE. What it is, what you can set, START, and
    HOW TO PLAY as a choice rather than an interruption. ---- */
-#menuWrap{position:fixed;inset:0;background:#080612ee;backdrop-filter:blur(7px);
+#menuWrap{position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(7px);
   display:flex;align-items:center;justify-content:center;z-index:75;padding:18px}
-.paper #menuWrap{background:#f4efe2f2}
 #mTitle{font-size:15px;font-weight:900;letter-spacing:3px;color:var(--gold);margin-bottom:8px}
 #mBlurb{font-size:12.5px;line-height:1.55;color:var(--dim);margin:0 0 14px}
 .tCard{position:relative}

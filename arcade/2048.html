@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>THE DOUBLING</title>
-<link rel="stylesheet" href="shell.css?v=317">
-<script src="shell.js?v=317"></script>
+<link rel="stylesheet" href="shell.css?v=524">
+<script src="shell.js?v=524"></script>
 <script>
 // draws a demo grid for the tutorial: [{v,k,cl,wr,wb}, ...] rows
 function tg(rows){
@@ -42,27 +42,21 @@ var LESSON=[
 </script>
 <style>
   #board{display:grid;grid-template-columns:repeat(4,76px);gap:8px;
-    background:#120c28;border:3px solid var(--info);border-radius:8px;padding:8px;
-    box-shadow:0 0 34px #22e0ff22}
+    background:var(--panel);border:3px solid var(--info);border-radius:8px;padding:8px;
+    box-shadow:0 0 34px var(--glow)}
   .t{width:var(--tile,76px);height:var(--tile,76px);border-radius:6px;display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:27px;background:#1a1236;color:var(--ink);
+    font-weight:900;font-size:27px;background:var(--cell);color:var(--ink);
     transition:transform .09s}
-  .t.e{background:#170f30}
+  .t.e{background:var(--cell2)}
   .t.new{animation:pop .16s ease-out both}
   .t.merge{animation:bump .18s ease-out both}
   @keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
   @keyframes bump{0%{transform:scale(1)}50%{transform:scale(1.16)}100%{transform:scale(1)}}
-  #over{position:absolute;inset:0;background:#0a0716e8;border-radius:8px;
+  #over{position:absolute;inset:0;background:var(--scrim);border-radius:8px;
     display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px}
   #over.on{display:flex}
   #over .t2{font-size:19px;letter-spacing:4px;font-weight:900;color:var(--rot)}
   #wrap{position:relative}
-
-  /* ---- ON PAPER ---- */
-  .paper #board{background:#00000012}
-  .paper .t{background:#00000010;color:var(--ink)}
-  .paper .t.e{background:#0000000a}
-  .paper #over{background:#fffdf8e8}
 </style>
 </head>
 <body>
@@ -170,21 +164,30 @@ function end(){
   draw();
 }
 function say(t){ $("#say").textContent=t||""; }
-// Two ladders, because a tile ramp built for a black background turns to mud on
-// cream. Same progression, different ink.
-var ONPAPER = document.documentElement.className.indexOf("paper") >= 0;
-var COL = ONPAPER
-  ? {2:"#eae3d2",4:"#e3dcc6",8:"#f0d9a8",16:"#f0c98a",32:"#efb787",64:"#eda278",
-     128:"#a8dcc8",256:"#8fd3bb",512:"#75c9ad",1024:"#c3b3e8",2048:"#f0c05a"}
-  : {2:"#241c40",4:"#2b2350",8:"#3a2a1a",16:"#4a3018",32:"#5a2f22",64:"#6b2b1e",
-     128:"#1f4038",256:"#1c4a3c",512:"#1a5546",1024:"#3a2560",2048:"#5a3a10"};
+// THE RAMP IS BUILT FROM THE PAPER, NOT PICKED FROM TWO.
+// This carried two hardcoded eleven-step ladders, one for dark and one for
+// cream, which is the same problem the boards had: the app has ten papers
+// and this had two. The progression is what matters and it is unchanged —
+// neutral, then warm, then mint, then violet, then gold at the top — but every
+// step is now that skin's own accent mixed over that skin's own board.
+var K = (window.ARCADE && window.ARCADE.skin) || null;
+var COL = (function () {
+  if (!K) return {};
+  var s = function (acc, amt) { return K.mix(K.panel, acc, amt); };
+  return { 2: s(K.ink, 0.07), 4: s(K.ink, 0.14),
+    8: s(K.gold, 0.22), 16: s(K.gold, 0.36), 32: s(K.rot, 0.26), 64: s(K.rot, 0.42),
+    128: s(K.ok, 0.26), 256: s(K.ok, 0.4), 512: s(K.ok, 0.56),
+    1024: s(K.myst, 0.46), 2048: s(K.gold, 0.72) };
+})();
 function draw(){
   var h="",i;
   for(i=0;i<N*N;i++){
     var v=G[i];
-    h+='<div class="t'+(v?"":" e")+'" style="--tile:'+(N>4?62:N<4?92:76)+'px;'+(v?"background:"+(COL[v]||"#6a4410")+";":"")
+    var fill = v ? (COL[v] || (K ? K.mix(K.panel, K.gold, 0.8) : "")) : "";
+    h+='<div class="t'+(v?"":" e")+'" style="--tile:'+(N>4?62:N<4?92:76)+'px;'+(fill?"background:"+fill+";":"")
       +(v>=1024?"font-size:20px;":v>=128?"font-size:23px;":"")
-      +(v>=8&&!ONPAPER?"color:var(--gold);":"")+(ONPAPER?"color:#2A2418;":"")+'">'+(v||"")+'</div>';
+      // the number sits ON the tile, so it is measured against the tile
+      +(fill&&K?"color:"+K.inkOn(fill)+";":"")+'">'+(v||"")+'</div>';
   }
   $("#board").style.gridTemplateColumns="repeat("+N+", "+(N>4?62:N<4?92:76)+"px)";
   $("#board").innerHTML=h;
