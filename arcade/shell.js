@@ -13,6 +13,10 @@
 // is the name: it cannot happen again on any host.
 // ============================================================================
 
+/* global SFX */ // assigned as window.SFX further down this same file;
+// bare reads are correct at runtime because every one of them is inside a
+// handler that cannot fire before the assignment. eslint cannot see that
+// through `window.`, and 13 no-undef errors buried the two real ones.
 (function () {
   // ---- THE SKIN ------------------------------------------------------------
   // The app has ten papers, seven of them light, and the arcade was hardcoded
