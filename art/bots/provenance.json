@@ -1,0 +1,119 @@
+{
+  "ada": {
+    "artist": "Alfred Edward Chalon",
+    "commonsFile": "File:Ada Lovelace portrait.jpg",
+    "credit": "Science Museum Group",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Ada_Lovelace_portrait.jpg",
+    "file": "art/bots/ada.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "agnesi": {
+    "artist": "Unknown author Unknown author",
+    "commonsFile": "File:Maria Gaetana Agnesi.jpg",
+    "credit": "reference",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Maria_Gaetana_Agnesi.jpg",
+    "file": "art/bots/agnesi.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "aryabhata": {
+    "artist": "",
+    "commonsFile": "File:2064 aryabhata-crp.jpg",
+    "credit": "Own work",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:2064_aryabhata-crp.jpg",
+    "file": "art/bots/aryabhata.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "euler": {
+    "artist": "Jakob Emanuel Handmann",
+    "commonsFile": "File:Leonhard Euler.jpg",
+    "credit": "Kunstmuseum Basel",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Leonhard_Euler.jpg",
+    "file": "art/bots/euler.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "gauss": {
+    "artist": "Christian Albrecht Jensen",
+    "commonsFile": "File:Carl Friedrich Gauss 1840 by Jensen.jpg",
+    "credit": "http://archiv.bbaw.de/archiv/archivbestaende/abteilung-sammlungen/gesamtbestand-des-kunstbesitzes/gelehrtengemaelde/gelehrtengemalde-seiten/ZIMM-0001.html",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Carl_Friedrich_Gauss_1840_by_Jensen.jpg",
+    "file": "art/bots/gauss.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "germain": {
+    "artist": "Unknown author Unknown author",
+    "commonsFile": "File:Germain.jpeg",
+    "credit": "http://www-history.mcs.st-andrews.ac.uk/PictDisplay/Germain.html",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Germain.jpeg",
+    "file": "art/bots/germain.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "hypatia": {
+    "artist": "Jules Maurice Gaspard",
+    "commonsFile": "File:Hypatia portrait.png",
+    "credit": "Elbert Hubbard, \"Hypatia\", in Little Journeys to the Homes of Great Teachers , v.23 #4, East Aurora, New York : The Roycrofters, 1908 (375 p. 2 v. ports. 21 cm)",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Hypatia_portrait.png",
+    "file": "art/bots/hypatia.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "johnson": {
+    "artist": "NASA",
+    "commonsFile": "File:Katherine Johnson 1983.jpg",
+    "credit": "https://crgis.ndc.nasa.gov/historic/File:1983-L-04373.jpg",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Katherine_Johnson_1983.jpg",
+    "file": "art/bots/johnson.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "khwarizmi": {
+    "artist": "\u0410. \u0410\u0434\u0430\u0448\u0435\u0432",
+    "commonsFile": "File:1983 CPA 5426.jpg",
+    "credit": "[1] , specifically [2]",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:1983_CPA_5426.jpg",
+    "file": "art/bots/khwarizmi.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "noether": {
+    "artist": "Unknown author Unknown author Publisher: Mathematical Association of America [3] , Brooklyn Museum [4] , Agnes Scott College [5] , [6]",
+    "commonsFile": "File:Noether.jpg",
+    "credit": "Emmy Noether (1882-1935) , Archived",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Noether.jpg",
+    "file": "art/bots/noether.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "ramanujan": {
+    "artist": "Unknown author Unknown author",
+    "commonsFile": "File:Srinivasa Ramanujan - OPC - 1.jpg",
+    "credit": "Oberwolfach Photo Collection",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Srinivasa_Ramanujan_-_OPC_-_1.jpg",
+    "file": "art/bots/ramanujan.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "seki": {
+    "artist": "upload by AMorozov",
+    "commonsFile": "File:Seki.jpeg",
+    "credit": "Gakken",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Seki.jpeg",
+    "file": "art/bots/seki.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "turing": {
+    "artist": "Possibly Arthur Reginald Chaffin (1893-1954)",
+    "commonsFile": "File:Alan Turing Aged 16.jpg",
+    "credit": "http://www.turingarchive.org/viewer/?id=521&amp;title=4",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Alan_Turing_Aged_16.jpg",
+    "file": "art/bots/turing.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  }
+}
