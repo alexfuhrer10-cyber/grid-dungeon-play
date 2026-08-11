@@ -26,6 +26,15 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "banneker": {
+    "artist": "Unknown author Unknown author",
+    "commonsFile": "File:Benjamin Banneker Portrait.jpg",
+    "credit": "Biography.com",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Benjamin_Banneker_Portrait.jpg",
+    "file": "art/bots/banneker.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "euler": {
     "artist": "Jakob Emanuel Handmann",
     "commonsFile": "File:Leonhard Euler.jpg",
@@ -80,6 +89,15 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "kovalevskaya": {
+    "artist": "Unknown author Unknown author",
+    "commonsFile": "File:Sofja Wassiljewna Kowalewskaja 1.jpg",
+    "credit": "http://www.goettinger-tageblatt.de/newsroom/wissen/dezentral/wissenlokal/art4263,603649",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Sofja_Wassiljewna_Kowalewskaja_1.jpg",
+    "file": "art/bots/kovalevskaya.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "noether": {
     "artist": "Unknown author Unknown author Publisher: Mathematical Association of America [3] , Brooklyn Museum [4] , Agnes Scott College [5] , [6]",
     "commonsFile": "File:Noether.jpg",
@@ -104,6 +122,15 @@
     "credit": "Gakken",
     "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Seki.jpeg",
     "file": "art/bots/seki.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "somerville": {
+    "artist": "Evert Duykinck",
+    "commonsFile": "File:Mary Somerville.jpg",
+    "credit": "Originally from en.wikipedia ; description page is (was) here 13:01, 16 April 2004 Magnus Manske 774x1100 (137,872 bytes) ({{msg::PD}}, from http://www.lib.utexas.edu/photodraw/portraits/index.html) .",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Mary_Somerville.jpg",
+    "file": "art/bots/somerville.webp",
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
