@@ -35,6 +35,15 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "cox": {
+    "artist": "Unknown author Unknown author",
+    "commonsFile": "File:Elbert Cox.jpg",
+    "credit": "Indiana University 1917 Yearbook http://webapp1.dlib.indiana.edu/archivesphotos/results/item.do?itemId=P0063516&amp;searchId=0&amp;searchResultIndex=1",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Elbert_Cox.jpg",
+    "file": "art/bots/cox.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "euler": {
     "artist": "Jakob Emanuel Handmann",
     "commonsFile": "File:Leonhard Euler.jpg",
@@ -59,6 +68,24 @@
     "credit": "http://www-history.mcs.st-andrews.ac.uk/PictDisplay/Germain.html",
     "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Germain.jpeg",
     "file": "art/bots/germain.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "haytham": {
+    "artist": "artwork drawn by Adolph Bo\u00ff, engraved by Jeremias Falck",
+    "commonsFile": "File:Hazan.png",
+    "credit": "Johannes Hevelius, Selenographia",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Hazan.png",
+    "file": "art/bots/haytham.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "hua": {
+    "artist": "\u725b\u754f\u4e88",
+    "commonsFile": "File:Hua Luogeng 1956.jpg",
+    "credit": "http://baike.baidu.com/albums/6351/6351.html#0$e78c65898b37b4d30e244463",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Hua_Luogeng_1956.jpg",
+    "file": "art/bots/hua.webp",
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
@@ -125,6 +152,15 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "shortz_photo": {
+    "artist": "Library of Congress Life",
+    "commonsFile": "File:Will Shortz (51507339693).jpg",
+    "credit": "20210921SM423",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Will_Shortz_(51507339693).jpg",
+    "file": "art/bots/shortz_photo.webp",
+    "license": "cc0",
+    "source": "Wikimedia Commons"
+  },
   "somerville": {
     "artist": "Evert Duykinck",
     "commonsFile": "File:Mary Somerville.jpg",
@@ -140,6 +176,15 @@
     "credit": "http://www.turingarchive.org/viewer/?id=521&amp;title=4",
     "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Alan_Turing_Aged_16.jpg",
     "file": "art/bots/turing.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "wilkins": {
+    "artist": "Unknown author Unknown author",
+    "commonsFile": "File:J. Ernest Wilkins 1944 Tuskegee University.png",
+    "credit": "https://archive.tuskegee.edu/repository/wp-content/uploads/2020/11/1944-Year-Book.pdf \"Tuskeana '44\" (Yearbook), Tuskegee University, 1944, p. 9",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:J._Ernest_Wilkins_1944_Tuskegee_University.png",
+    "file": "art/bots/wilkins.webp",
     "license": "public domain",
     "source": "Wikimedia Commons"
   }
