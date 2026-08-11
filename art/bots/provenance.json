@@ -35,6 +35,13 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "boz": {
+    "file": "art/bots/boz.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "boz.jpg",
+    "source": "owner supplied"
+  },
   "cox": {
     "artist": "Unknown author Unknown author",
     "commonsFile": "File:Elbert Cox.jpg",
@@ -52,6 +59,13 @@
     "file": "art/bots/euler.webp",
     "license": "public domain",
     "source": "Wikimedia Commons"
+  },
+  "fuhrer": {
+    "file": "art/bots/fuhrer.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "fuhrer.jpg",
+    "source": "owner supplied"
   },
   "gauss": {
     "artist": "Christian Albrecht Jensen",
@@ -107,6 +121,27 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "karia": {
+    "file": "art/bots/karia.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "karia.webp",
+    "source": "owner supplied"
+  },
+  "kaswell": {
+    "file": "art/bots/kaswell.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "kaswell.jpg",
+    "source": "owner supplied"
+  },
+  "keng": {
+    "file": "art/bots/keng.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "keng.webp",
+    "source": "owner supplied"
+  },
   "khwarizmi": {
     "artist": "\u0410. \u0410\u0434\u0430\u0448\u0435\u0432",
     "commonsFile": "File:1983 CPA 5426.jpg",
@@ -124,6 +159,20 @@
     "file": "art/bots/kovalevskaya.webp",
     "license": "public domain",
     "source": "Wikimedia Commons"
+  },
+  "magdi": {
+    "file": "art/bots/magdi.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "magdi.webp",
+    "source": "owner supplied"
+  },
+  "march": {
+    "file": "art/bots/march.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "march.jpg",
+    "source": "owner supplied"
   },
   "noether": {
     "artist": "Unknown author Unknown author Publisher: Mathematical Association of America [3] , Brooklyn Museum [4] , Agnes Scott College [5] , [6]",
@@ -178,6 +227,13 @@
     "file": "art/bots/turing.webp",
     "license": "public domain",
     "source": "Wikimedia Commons"
+  },
+  "wang": {
+    "file": "art/bots/wang.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "wang.webp",
+    "source": "owner supplied"
   },
   "wilkins": {
     "artist": "Unknown author Unknown author",
