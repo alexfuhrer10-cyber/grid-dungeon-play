@@ -21,7 +21,7 @@
 
    The rule now: NOTHING in here may reject. A miss falls back to the cache, then
    to whatever is there, and the page decides what to do about it. */
-const CACHE = "kkd-601";
+const CACHE = "kkd-602";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
