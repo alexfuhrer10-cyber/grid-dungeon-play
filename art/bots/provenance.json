@@ -51,6 +51,13 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "eiger": {
+    "file": "art/bots/eiger.webp",
+    "license": "owner supplied",
+    "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
+    "originalName": "eiger.jpg",
+    "source": "owner supplied"
+  },
   "euler": {
     "artist": "Jakob Emanuel Handmann",
     "commonsFile": "File:Leonhard Euler.jpg",
