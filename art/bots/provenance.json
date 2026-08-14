@@ -17,6 +17,24 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "archimedes": {
+    "artist": "Domenico Fetti",
+    "commonsFile": "File:Domenico-Fetti Archimedes 1620.jpg",
+    "credit": "http://archimedes2.mpiwg-berlin.mpg.de/archimedes_templates/popup.htm",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Domenico-Fetti_Archimedes_1620.jpg",
+    "file": "art/bots/archimedes.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "aristotle": {
+    "artist": "After Lysippos",
+    "commonsFile": "File:Aristotle Altemps Inv8575.jpg",
+    "credit": "Jastrow (2006)",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Aristotle_Altemps_Inv8575.jpg",
+    "file": "art/bots/aristotle.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "aryabhata": {
     "artist": "",
     "commonsFile": "File:2064 aryabhata-crp.jpg",
@@ -42,12 +60,57 @@
     "originalName": "boz.jpg",
     "source": "owner supplied"
   },
+  "carver": {
+    "artist": "Adam Cuerden",
+    "commonsFile": "File:George Washington Carver c1910 - Restoration.jpg",
+    "credit": "Tuskegee University Archives/Museum",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:George_Washington_Carver_c1910_-_Restoration.jpg",
+    "file": "art/bots/carver.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "cleopatra": {
+    "artist": "Louis le Grand",
+    "commonsFile": "File:Kleopatra-VII.-Altes-Museum-Berlin1.jpg",
+    "credit": "own work / Altes Museum Berlin (Berliner Museumsinsel)",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Kleopatra-VII.-Altes-Museum-Berlin1.jpg",
+    "file": "art/bots/cleopatra.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "cox": {
     "artist": "Unknown author Unknown author",
     "commonsFile": "File:Elbert Cox.jpg",
     "credit": "Indiana University 1917 Yearbook http://webapp1.dlib.indiana.edu/archivesphotos/results/item.do?itemId=P0063516&amp;searchId=0&amp;searchResultIndex=1",
     "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Elbert_Cox.jpg",
     "file": "art/bots/cox.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "curie": {
+    "artist": "Henri Manuel",
+    "commonsFile": "File:Marie Curie c. 1920s.jpg",
+    "credit": "cdn-images-1.medium.com",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Marie_Curie_c._1920s.jpg",
+    "file": "art/bots/curie.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "darwin": {
+    "artist": "Charles_Darwin_seated.jpg : Henry Maull (1829\u20131914) and John Fox (1832\u20131907) (Maull &amp; Fox) [ 3 ] derivative work: Bea o",
+    "commonsFile": "File:Charles Darwin seated crop.jpg",
+    "credit": "Charles_Darwin_seated.jpg",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Charles_Darwin_seated_crop.jpg",
+    "file": "art/bots/darwin.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "davinci": {
+    "artist": "Attributed to Francesco Melzi",
+    "commonsFile": "File:Francesco Melzi - Portrait of Leonardo.png",
+    "credit": "File:Francesco_Molzi_-_Portrait_of_Leonardo_-_WGA14795.jpg",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Francesco_Melzi_-_Portrait_of_Leonardo.png",
+    "file": "art/bots/davinci.webp",
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
@@ -58,6 +121,15 @@
     "originalName": "eiger.jpg",
     "source": "owner supplied"
   },
+  "einstein": {
+    "artist": "Oren Jack Turner",
+    "commonsFile": "File:Albert Einstein Head cleaned.jpg",
+    "credit": "This image is available from the United States Library of Congress 's Prints and Photographs division under the digital ID cph.3b46036 . This tag does not indicate the copyright status of the attached",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Albert_Einstein_Head_cleaned.jpg",
+    "file": "art/bots/einstein.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "euler": {
     "artist": "Jakob Emanuel Handmann",
     "commonsFile": "File:Leonhard Euler.jpg",
@@ -67,12 +139,30 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "franklin": {
+    "artist": "Joseph-Siffred Duplessis",
+    "commonsFile": "File:Joseph Siffrein Duplessis - Benjamin Franklin - Google Art Project.jpg",
+    "credit": "ZgEyj5EEKdux-g at Google Cultural Institute maximum zoom level",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg",
+    "file": "art/bots/franklin.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "fuhrer": {
     "file": "art/bots/fuhrer.webp",
     "license": "owner supplied",
     "note": "Dropped in by the owner. Not from a free repository; clearance is the owner's to confirm.",
     "originalName": "fuhrer.jpg",
     "source": "owner supplied"
+  },
+  "galileo": {
+    "artist": "Justus Sustermans",
+    "commonsFile": "File:Galileo Galilei (1564-1642) RMG BHC2700.tiff",
+    "credit": "http://collections.rmg.co.uk/collections/objects/14174",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Galileo_Galilei_(1564-1642)_RMG_BHC2700.tiff",
+    "file": "art/bots/galileo.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
   },
   "gauss": {
     "artist": "Christian Albrecht Jensen",
@@ -190,6 +280,24 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "plato": {
+    "artist": "Marie-Lan Nguyen",
+    "commonsFile": "File:Plato Silanion Musei Capitolini MC1377.png",
+    "credit": "Own work",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Plato_Silanion_Musei_Capitolini_MC1377.png",
+    "file": "art/bots/plato.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "pythagoras": {
+    "artist": "Unknown author Unknown author",
+    "commonsFile": "File:Pythagoras in the Roman Forum, Colosseum.jpg",
+    "credit": "Photo by Szilas, 2013-03-04",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Pythagoras_in_the_Roman_Forum,_Colosseum.jpg",
+    "file": "art/bots/pythagoras.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "ramanujan": {
     "artist": "Unknown author Unknown author",
     "commonsFile": "File:Srinivasa Ramanujan - OPC - 1.jpg",
@@ -226,6 +334,15 @@
     "license": "public domain",
     "source": "Wikimedia Commons"
   },
+  "tesla": {
+    "artist": "Napoleon Sarony",
+    "commonsFile": "File:Tesla circa 1890.jpeg",
+    "credit": "postcard Tesla Museum, document no. MNT, VI/V 10, via RadioGraphics",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Tesla_circa_1890.jpeg",
+    "file": "art/bots/tesla.webp",
+    "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
   "turing": {
     "artist": "Possibly Arthur Reginald Chaffin (1893-1954)",
     "commonsFile": "File:Alan Turing Aged 16.jpg",
@@ -233,6 +350,15 @@
     "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Alan_Turing_Aged_16.jpg",
     "file": "art/bots/turing.webp",
     "license": "public domain",
+    "source": "Wikimedia Commons"
+  },
+  "voltaire": {
+    "artist": "Nicolas de Largilli\u00e8re",
+    "commonsFile": "File:Nicolas de Largilli\u00e8re - Portrait de Voltaire (1694-1778) en 1718 - P208 - mus\u00e9e Carnavalet - 5 (cropped).jpg",
+    "credit": "",
+    "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Nicolas_de_Largilli%C3%A8re_-_Portrait_de_Voltaire_(1694-1778)_en_1718_-_P208_-_mus%C3%A9e_Carnavalet_-_5_(cropped).jpg",
+    "file": "art/bots/voltaire.webp",
+    "license": "cc0",
     "source": "Wikimedia Commons"
   },
   "wang": {
