@@ -320,6 +320,38 @@
    "display": "'Archivo', system-ui, sans-serif",
    "trackMul": 0.5,
    "paper": true
+  },
+  {
+   "id": "lamp",
+   "name": "The Reading Lamp",
+   "glow": true,
+   "rootBg": "radial-gradient(ellipse at 50% -8%, #3d2a13 0%, #241708 54%, #150d05 100%)",
+   "bg": "#1B1207",
+   "bgDeep": "#120B04",
+   "surf": "#26190B",
+   "surf2": "#372613",
+   "border": "#A47B42",
+   "hairline": "#5C3F21",
+   "hairline2": "#4A3419",
+   "text": "#FFF3E1",
+   "text2": "#E6CCA6",
+   "text3": "#CBAE86",
+   "dim": "#AE9370",
+   "dim2": "#B79C79",
+   "accent": "#FFA630",
+   "accentInk": "#201404",
+   "info": "#58CFE8",
+   "infoSoft": "#8FDDEE",
+   "infoBright": "#A6E8F5",
+   "ok": "#6FE0A8",
+   "reward": "#F5D77A",
+   "bad": "#ff6f70",
+   "warn": "#FF7F4D",
+   "scrim": "#0C0703",
+   "face": "'Archivo', system-ui, sans-serif",
+   "display": "'Oxanium', 'Archivo', system-ui, sans-serif",
+   "trackMul": 0.8,
+   "paper": false
   }
  ]
 }
