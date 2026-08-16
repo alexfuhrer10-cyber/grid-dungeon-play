@@ -352,6 +352,38 @@
    "display": "'Oxanium', 'Archivo', system-ui, sans-serif",
    "trackMul": 0.8,
    "paper": false
+  },
+  {
+   "id": "glasshouse",
+   "name": "The Glasshouse",
+   "glow": true,
+   "rootBg": "radial-gradient(ellipse at 50% -8%, #17392a 0%, #0f2a1c 52%, #081410 100%)",
+   "bg": "#0C1B12",
+   "bgDeep": "#071109",
+   "surf": "#12271A",
+   "surf2": "#1C3826",
+   "border": "#4E8A63",
+   "hairline": "#1E4230",
+   "hairline2": "#1A3626",
+   "text": "#EEF9F0",
+   "text2": "#C2DCC9",
+   "text3": "#A3C2AC",
+   "dim": "#87A692",
+   "dim2": "#93B39D",
+   "accent": "#D96BFF",
+   "accentInk": "#140A1B",
+   "info": "#4FC3F7",
+   "infoSoft": "#8ED8F9",
+   "infoBright": "#A6E4FB",
+   "ok": "#58EFC2",
+   "reward": "#F2D06B",
+   "bad": "#ff6f7d",
+   "warn": "#FFA05C",
+   "scrim": "#050D08",
+   "face": "'Space Grotesk', sans-serif",
+   "display": "'Space Grotesk', sans-serif",
+   "trackMul": 0.7,
+   "paper": false
   }
  ]
 }
