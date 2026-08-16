@@ -804,15 +804,16 @@ function solved(){
   for(r2=0;r2<N;r2++) for(c2=0;c2<N;c2++) if(scar[r2][c2]) t++;
   if(!t) score+=250;
   SFX.win(); flash("SOLVED","var(--ok)");
-  ARCADE.report({solved:true,size:N,brands:brandCount(),blind:!!blind});
+  ARCADE.report({solved:true,size:N,brands:brandCount(),blind:!!blind,score:score});
   say("Puzzle solved. +500" + (t?"":" and +250 for an unbranded board") + ".");
   puzzleNo++;
-  setTimeout(function(){ start(puzzleNo>=3?5:4); }, 1900);
+  setTimeout(function(){ start(CFLEVELS[cflevel].N); }, 1900);
   draw();
 }
 function dead(why){
   running=false; clearInterval(tickT);
   SFX.no(); flash("BURIED","var(--rot)");
+  ARCADE.report({gameOver:true,score:score,size:N,blind:!!blind});
   say((why||"The shaft filled up.") + " Score " + score + ".<br>Press NEW GAME.",true);
   draw();
 }
