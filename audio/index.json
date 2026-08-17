@@ -63,13 +63,6 @@
   "kb": 470
  },
  {
-  "track": 10,
-  "name": "10-insert-coin",
-  "take": "c",
-  "secs": 26.7,
-  "kb": 405
- },
- {
   "track": 11,
   "name": "11-the-run",
   "take": "b",
@@ -82,13 +75,6 @@
   "take": "b",
   "secs": 32.0,
   "kb": 432
- },
- {
-  "track": 14,
-  "name": "14-seats",
-  "take": "b",
-  "secs": 32.0,
-  "kb": 526
  },
  {
   "track": 15,
