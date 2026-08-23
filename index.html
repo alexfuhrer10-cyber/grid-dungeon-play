@@ -11,12 +11,59 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <style>html, body, #root { margin: 0; padding: 0; background: #060412; }</style>
     <script>
+      /* THE WORKER MUST NOT RUN ON THE DEV SERVER (kkd-972).
+         sw.js is cache-first for everything that is not a navigation, which is
+         correct in production because Vite emits CONTENT-HASHED filenames: a new
+         build is a new URL, so a cached asset can never be the wrong one.
+
+         In dev the module URLs are stable -- /src/engine/lessonPool.js is that
+         forever -- so cache-first pins the FIRST version the browser ever saw and
+         serves it after every edit, reload and server restart. The symptom is a
+         running app that disagrees with the file on disk while the dev server,
+         the tests and the linter all agree with each other, which is a very
+         expensive thing to debug and a worse thing to trust: it makes every
+         "verified live" claim unreliable.
+
+         Vite injects its client script in dev and never in a build, so that is
+         the signal. Any worker left over from before this check is torn down. */
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+        var DEV = !!document.querySelector('script[src="/@vite/client"]');
+        if (!DEV) {
+          window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+        } else {
+          /* UNREGISTERING IS NOT ENOUGH ON THIS LOAD. A worker that is being
+             unregistered still CONTROLS the page it is unregistering on, so the
+             modules already in flight keep coming from its cache while the ones
+             requested afterwards come from the dev server. Measured in real
+             Chrome, that lands a MIXED module graph -- some files weeks old,
+             some current -- which is strictly more confusing than the fully
+             stale page it replaces, because half the code does match disk.
+
+             So: tear it down, then reload once, and only when a controller is
+             actually present. After the reload there is none, so this cannot
+             loop; the sessionStorage flag is a second belt for the case where a
+             browser hands us a controller anyway. */
+          var TORN = "gd_sw_torn";
+          Promise.all([
+            navigator.serviceWorker.getRegistrations()
+              .then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); })
+              .catch(function () {}),
+            (window.caches && caches.keys)
+              ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }).catch(function () {})
+              : null,
+          ]).then(function () {
+            var once = false;
+            try { once = sessionStorage.getItem(TORN) === "1"; } catch (e) {}
+            if (navigator.serviceWorker.controller && !once) {
+              try { sessionStorage.setItem(TORN, "1"); } catch (e) {}
+              location.reload();
+            }
+          }).catch(function () {});
+        }
       }
     </script>
-    <script type="module" crossorigin src="./assets/index-CWZoSBQH.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BW7AD-4i.css">
+    <script type="module" crossorigin src="./assets/index-nP88ATJn.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-4VV001Bl.css">
   </head>
   <body>
     <div id="root"></div>
